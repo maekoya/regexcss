@@ -1,0 +1,12 @@
+import type { Rule } from "../../../types.ts";
+
+// word-break — https://tailwindcss.com/docs/word-break
+const WORD_BREAK: Record<string, string> = {
+  normal: "normal",
+  all: "break-all",
+  keep: "keep-all",
+};
+
+export const wordBreakRules: Rule[] = [
+  [/^break-(normal|all|keep)$/, ([, k]) => ({ "word-break": WORD_BREAK[k ?? ""] ?? "" })],
+];

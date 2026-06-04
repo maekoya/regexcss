@@ -1,0 +1,14 @@
+{
+  "name": "regexcss-example-basic",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview"
+  },
+  "dependencies": {
+    "regexcss": "workspace:*"
+  }
+}

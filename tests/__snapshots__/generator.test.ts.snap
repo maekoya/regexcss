@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createGenerator > end-to-end snapshot for mixed input 1`] = `
+@layer utilities {
+  .m-1 { margin: 1px; }
+  .p-2 { padding: 2px; }
+  .hover\\:m-4:hover { margin: 4px; }
+  .bg-red { background-color: red; }
+
+  @media (--md) {
+    .md\\:m-3 { margin: 3px; }
+  }
+}
+`;

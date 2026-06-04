@@ -1,0 +1,75 @@
+{
+  "name": "regexcss",
+  "version": "0.1.0",
+  "description": "Minimal, user-defined CSS utility library inspired by UnoCSS/Tailwind",
+  "keywords": [
+    "atomic-css",
+    "css",
+    "lightningcss",
+    "tailwind",
+    "unocss",
+    "utility",
+    "vite-plugin"
+  ],
+  "homepage": "https://github.com/maekoya/regexcss#readme",
+  "bugs": {
+    "url": "https://github.com/maekoya/regexcss/issues"
+  },
+  "license": "MIT",
+  "author": "maekoya <maekoya@stromatolite.jp>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maekoya/regexcss.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./helpers": "./dist/helpers.mjs",
+    "./preset": "./dist/preset.mjs",
+    "./vite": "./dist/vite.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test",
+    "typecheck": "tsc --noEmit",
+    "release": "bumpp",
+    "prepublishOnly": "pnpm run typecheck && vp test --run && pnpm run build",
+    "prepare": "vp config"
+  },
+  "dependencies": {
+    "tinyglobby": "^0.2.17",
+    "unconfig": "^7.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "bumpp": "^11.1.0",
+    "typescript": "6.0.3",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.24",
+    "vite-plus": "0.1.24",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@0.1.24"
+  },
+  "peerDependencies": {
+    "vite": "^8"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.5.1"
+}
