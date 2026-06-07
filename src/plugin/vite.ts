@@ -13,7 +13,10 @@ const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 //   @import "regexcss" layer(website.utilities);
 //   @import "regexcss" layer("website.utilities");
 // (Tailwind v4 style — embeds generated CSS directly inside a user CSS file.)
-const CSS_IMPORT_RE = /@import\s+["']regexcss["'](?:\s+layer\(([^)]+)\))?;?/g;
+// Layer content excludes `(` as well as `)`: a CSS `<layer-name>` never contains
+// parens, and excluding `(` stops `[^…]+` from scanning across the whole input on
+// pathological strings like `@import "regexcss" layer((…` (CodeQL js/polynomial-redos).
+const CSS_IMPORT_RE = /@import\s+["']regexcss["'](?:\s+layer\(([^()]+)\))?;?/g;
 
 const CONTENT_EXTENSIONS = new Set([
   ".html",

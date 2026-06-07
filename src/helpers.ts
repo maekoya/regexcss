@@ -63,8 +63,15 @@ export const createVariant = (
 // CSS block comments (`/* ... */`) are stripped before parsing to avoid
 // false positives inside commented-out lines. Returns a `{ "--name": "(query)" }`
 // map ready to pass to `defineConfig({ customMedia: ... })`.
-const BLOCK_COMMENT_RE = /\/\*[\s\S]*?\*\//g;
-const CUSTOM_MEDIA_RE = /@custom-media\s+(--[\w-]+)\s+([^;]+);/g;
+// `(?:\*\/|$)` makes an open `/*` always resolve (to its close or end-of-input),
+// so the global replace never re-scans from each `/*` — avoiding O(n²) backtracking
+// on inputs like `/*a/*a/*…` (CodeQL js/polynomial-redos). Treating an unterminated
+// comment as running to EOF also matches CSS tokenization.
+const BLOCK_COMMENT_RE = /\/\*[\s\S]*?(?:\*\/|$)/g;
+// The query starts with a non-space char (`[^;\s]`) so the preceding `\s+` and the
+// query no longer both match whitespace — removing the ambiguity that made this
+// polynomial on `@custom-media --x␠␠…` (no trailing `;`).
+const CUSTOM_MEDIA_RE = /@custom-media\s+(--[\w-]+)\s+([^;\s][^;]*);/g;
 
 export const parseCustomMedia = (cssText: string): Record<string, string> => {
   const stripped = cssText.replace(BLOCK_COMMENT_RE, "");

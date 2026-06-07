@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 // Mirror of `CSS_IMPORT_RE` in src/plugin/vite.ts.
 // Keep the two in sync if either changes.
-const CSS_IMPORT_RE = /@import\s+["']regexcss["'](?:\s+layer\(([^)]+)\))?;?/g;
+const CSS_IMPORT_RE = /@import\s+["']regexcss["'](?:\s+layer\(([^()]+)\))?;?/g;
 
 const matches = (code: string) => [...code.matchAll(CSS_IMPORT_RE)];
 
