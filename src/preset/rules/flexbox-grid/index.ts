@@ -2,7 +2,13 @@ import type { Rule } from "../../../types.ts";
 import { alignContentRules } from "./align-content.ts";
 import { alignItemsRules } from "./align-items.ts";
 import { alignSelfRules } from "./align-self.ts";
+import { flexDirectionRules } from "./flex-direction.ts";
+import { flexWrapRules } from "./flex-wrap.ts";
 import { gapRules } from "./gap.ts";
+import { gridAutoColumnsRules } from "./grid-auto-columns.ts";
+import { gridAutoFlowRules } from "./grid-auto-flow.ts";
+import { gridAutoRowsRules } from "./grid-auto-rows.ts";
+import { gridRowRules } from "./grid-row.ts";
 import { gridTemplateColumnsRules } from "./grid-template-columns.ts";
 import { gridTemplateRowsRules } from "./grid-template-rows.ts";
 import { justifyContentRules } from "./justify-content.ts";
@@ -15,7 +21,13 @@ export {
   alignContentRules,
   alignItemsRules,
   alignSelfRules,
+  flexDirectionRules,
+  flexWrapRules,
   gapRules,
+  gridAutoColumnsRules,
+  gridAutoFlowRules,
+  gridAutoRowsRules,
+  gridRowRules,
   gridTemplateColumnsRules,
   gridTemplateRowsRules,
   justifyContentRules,
@@ -29,7 +41,13 @@ export const flexboxGridRules: Rule[] = [
   ...alignContentRules,
   ...alignItemsRules,
   ...alignSelfRules,
+  ...flexDirectionRules,
+  ...flexWrapRules,
   ...gapRules,
+  ...gridAutoColumnsRules,
+  ...gridAutoFlowRules,
+  ...gridAutoRowsRules,
+  ...gridRowRules,
   ...gridTemplateColumnsRules,
   ...gridTemplateRowsRules,
   ...justifyContentRules,
