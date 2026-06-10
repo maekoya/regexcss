@@ -19,8 +19,13 @@ export const resolveFiles = async (content: ContentConfig, cwd: string): Promise
 // most SCAN_CONCURRENCY reads in flight regardless of how many files match.
 const SCAN_CONCURRENCY = 32;
 
-export const scanFiles = async (files: string[], extract: (code: string) => Iterable<string>): Promise<Set<string>> => {
-  const tokens = new Set<string>();
+// Returns tokens per file (not one merged set) so callers can update a single
+// file's entry on change events instead of re-reading the whole content tree.
+export const scanFiles = async (
+  files: string[],
+  extract: (code: string) => Iterable<string>,
+): Promise<Map<string, Set<string>>> => {
+  const fileTokens = new Map<string, Set<string>>();
   let next = 0;
 
   const worker = async (): Promise<void> => {
@@ -28,11 +33,11 @@ export const scanFiles = async (files: string[], extract: (code: string) => Iter
       const file = files[next++];
       if (file === undefined) break; // past the end (also satisfies noUncheckedIndexedAccess)
       const code = await readFile(file, "utf8");
-      for (const token of extract(code)) tokens.add(token);
+      fileTokens.set(file, new Set(extract(code)));
     }
   };
 
   const workers = Array.from({ length: Math.min(SCAN_CONCURRENCY, files.length) }, worker);
   await Promise.all(workers);
-  return tokens;
+  return fileTokens;
 };
