@@ -21,4 +21,16 @@ describe("escapeSelector", () => {
   it("escapes multiple meta-chars combined", () => {
     expect(escapeSelector("md:hover:m-1.5")).toBe("md\\:hover\\:m-1\\.5");
   });
+
+  it("hex-escapes a leading digit (CSS idents may not start with one)", () => {
+    expect(escapeSelector("2xl:m-1")).toBe("\\32 xl\\:m-1");
+  });
+
+  it("hex-escapes a digit after a leading dash", () => {
+    expect(escapeSelector("-2xl:m-1")).toBe("-\\32 xl\\:m-1");
+  });
+
+  it("leaves non-leading digits alone", () => {
+    expect(escapeSelector("m2-1")).toBe("m2-1");
+  });
 });

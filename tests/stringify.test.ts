@@ -17,4 +17,17 @@ describe("stringifyDeclarations", () => {
   it("emits multiple declarations joined by space", () => {
     expect(stringifyDeclarations({ margin: "1px", padding: "2px" })).toBe("margin: 1px; padding: 2px;");
   });
+
+  it("accepts CSSEntries and preserves duplicate properties in order", () => {
+    expect(
+      stringifyDeclarations([
+        ["display", "-webkit-box"],
+        ["display", "flex"],
+      ]),
+    ).toBe("display: -webkit-box; display: flex;");
+  });
+
+  it("normalizes camelCase keys in CSSEntries too", () => {
+    expect(stringifyDeclarations([["backgroundColor", "red"]])).toBe("background-color: red;");
+  });
 });

@@ -1,3 +1,5 @@
+import { indentLines } from "./stringify.ts";
+
 // One CSS-ident segment: starts with a letter/`_`, or `-` followed by a
 // letter/`_`/`-` (so `-webkit` and `--foo` are fine, but `-1` and a lone `-`
 // are not — a digit may never start an ident). Stays ASCII-only on purpose;
@@ -19,9 +21,5 @@ export const renderLayer = (css: string, layerName: string | undefined): string 
     );
   }
   if (css.length === 0) return css;
-  const indented = css
-    .split("\n")
-    .map((line) => (line.length > 0 ? `  ${line}` : line))
-    .join("\n");
-  return `@layer ${layerName} {\n${indented}\n}`;
+  return `@layer ${layerName} {\n${indentLines(css)}\n}`;
 };

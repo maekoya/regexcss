@@ -27,10 +27,25 @@ describe("createGenerator", () => {
     expect(css).toBe(".m-1 { margin: 1px; }");
   });
 
-  it("skips unmatched tokens", async () => {
+  it("skips unmatched tokens and reports them", async () => {
     const gen = createGenerator({ rules });
-    const { matched } = await gen.generate(["unknown-token"]);
+    const { matched, unmatched } = await gen.generate(["unknown-token"]);
     expect(matched.size).toBe(0);
+    expect(unmatched.has("unknown-token")).toBe(true);
+  });
+
+  it("keeps reporting unmatched tokens on repeated (cached) generate calls", async () => {
+    const gen = createGenerator({ rules });
+    await gen.generate(["unknown-token"]);
+    const { unmatched } = await gen.generate(["unknown-token"]);
+    expect(unmatched.has("unknown-token")).toBe(true);
+  });
+
+  it("does not report prefix-skipped tokens as unmatched", async () => {
+    const gen = createGenerator({ rules, prefix: "tw-" });
+    const { unmatched } = await gen.generate(["m-1", "tw-unknown"]);
+    expect(unmatched.has("m-1")).toBe(false);
+    expect(unmatched.has("tw-unknown")).toBe(true);
   });
 
   it("applies hover variant as selector wrap", async () => {
@@ -81,6 +96,55 @@ describe("createGenerator", () => {
     const tokens = ["m-1", "p-2", "md:m-3", "hover:m-4", "bg-red"];
     const { css } = await gen.generate(tokens);
     expect(css).toMatchSnapshot();
+  });
+
+  it("emits the same CSS regardless of token discovery order", async () => {
+    const tokens = ["m-1", "p-2", "md:m-3", "hover:m-4", "bg-red"];
+    const shuffled = ["bg-red", "hover:m-4", "p-2", "md:m-3", "m-1"];
+    const a = await createGenerator({ rules, variants }).generate(tokens);
+    const b = await createGenerator({ rules, variants }).generate(shuffled);
+    expect(b.css).toBe(a.css);
+  });
+
+  it("orders output by rule definition, then variant definition (cascade order)", async () => {
+    const { css } = await createGenerator({ rules, variants }).generate(["hover:m-1", "p-1", "m-1"]);
+    expect(css).toMatchInlineSnapshot(`
+      .m-1 { margin: 1px; }
+      .p-1 { padding: 1px; }
+      .hover\\:m-1:hover { margin: 1px; }
+    `);
+  });
+
+  it("returns identical CSS from repeated generate calls (memo cache)", async () => {
+    const gen = createGenerator({ rules, variants });
+    const first = await gen.generate(["md:m-1", "m-2"]);
+    const second = await gen.generate(["md:m-1", "m-2"]);
+    expect(second.css).toBe(first.css);
+    expect(second.matched).toEqual(first.matched);
+  });
+
+  it("supports CSSEntries rules (duplicate properties for fallbacks)", async () => {
+    const entriesRules: Rule[] = [
+      [
+        /^stack$/,
+        () => [
+          ["display", "-webkit-box"],
+          ["display", "flex"],
+        ],
+      ],
+    ];
+    const { css } = await createGenerator({ rules: entriesRules }).generate(["stack"]);
+    expect(css).toBe(".stack { display: -webkit-box; display: flex; }");
+  });
+
+  it("escapes a leading digit in variant-prefixed tokens", async () => {
+    const v: Variant[] = [[/^2xl:/, (_, raw) => ({ matcher: raw.slice(4), parent: "@media (--2xl)" })]];
+    const { css } = await createGenerator({ rules, variants: v }).generate(["2xl:m-1"]);
+    expect(css).toMatchInlineSnapshot(`
+      @media (--2xl) {
+        .\\32 xl\\:m-1 { margin: 1px; }
+      }
+    `);
   });
 
   it("emits @custom-media declarations before the layered body", async () => {

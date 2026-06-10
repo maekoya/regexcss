@@ -3,6 +3,7 @@ export { createGenerator } from "./core/generator.ts";
 export { defaultExtractor } from "./extractor/tokenize.ts";
 export type {
   ContentConfig,
+  CSSEntries,
   CSSObject,
   GenerateOptions,
   GenerateResult,

@@ -8,6 +8,14 @@
 export type CSSObject = Record<string, string>;
 
 /**
+ * Ordered list of CSS property → value pairs, e.g. `[["display", "-webkit-box"], ["display", "flex"]]`.
+ *
+ * Unlike {@link CSSObject}, the same property may appear more than once — use this when a
+ * utility needs duplicate declarations for fallbacks. Keys are normalized like CSSObject keys.
+ */
+export type CSSEntries = Array<[property: string, value: string]>;
+
+/**
  * Context passed to each rule handler so the handler can inspect the original token,
  * the post-variant residue, and the variant chain that produced it.
  */
@@ -25,8 +33,11 @@ export interface RuleContext {
  *
  * Returning `undefined` skips this rule and lets the next matching one try, which is
  * useful for guards (e.g. only handle when a captured value is numerically valid).
+ *
+ * Handlers must be pure functions of their inputs: the generator memoizes the result
+ * per token, so a handler that reads mutable external state may see stale output.
  */
-export type RuleHandler = (match: RegExpMatchArray, ctx: RuleContext) => CSSObject | undefined;
+export type RuleHandler = (match: RegExpMatchArray, ctx: RuleContext) => CSSObject | CSSEntries | undefined;
 
 /** A single rule: a regex and a handler that produces a {@link CSSObject}. */
 export type Rule = [RegExp, RuleHandler];
@@ -65,14 +76,22 @@ export interface ContentConfig {
 export interface UserConfig {
   /**
    * User-defined utility rules. Each rule is a `[RegExp, handler]` tuple where the handler
-   * receives the regex match array and returns a CSSObject, or `undefined` to defer to the
-   * next matching rule.
+   * receives the regex match array and returns a CSSObject (or CSSEntries), or `undefined`
+   * to defer to the next matching rule.
+   *
+   * Definition order matters twice: earlier rules win when several match the same token,
+   * and generated CSS is emitted in rule order — so later rules override earlier ones in
+   * the cascade when both apply to the same element.
    */
   rules: Rule[];
   /**
    * Variant matchers applied to tokens before rule matching. Variants are recursively
    * applied head-to-tail until none match; each variant strips its own prefix and may wrap
    * the resulting selector and/or at-rule.
+   *
+   * Definition order doubles as cascade order: variant-wrapped output is emitted after the
+   * base utilities, grouped by variant in definition order. Define responsive breakpoints
+   * smallest-first (`sm`, `md`, `lg`) for mobile-first overrides.
    */
   variants?: Variant[];
   /**
@@ -121,6 +140,12 @@ export interface GenerateResult {
   css: string;
   /** Set of tokens that successfully matched a rule. Useful for debugging / coverage. */
   matched: Set<string>;
+  /**
+   * Tokens that passed the prefix filter but matched no rule. With the default extractor
+   * this is noisy (it contains every identifier-like word in the scanned sources), so it
+   * is mainly useful with a targeted extractor or for ad-hoc debugging.
+   */
+  unmatched: Set<string>;
 }
 
 /** Per-call options for {@link Generator.generate}. */

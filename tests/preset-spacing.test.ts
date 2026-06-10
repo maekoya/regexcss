@@ -9,7 +9,7 @@ const ctx = (token: string): RuleContext => ({
   variants: [],
 });
 
-const match = (token: string, rules = paddingRules) => matchRule(token, rules, ctx(token));
+const match = (token: string, rules = paddingRules) => matchRule(token, rules, ctx(token))?.css;
 
 describe("preset spacing numeric guard", () => {
   it("accepts integers and decimals (1 unit = 0.25rem)", () => {

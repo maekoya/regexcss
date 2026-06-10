@@ -9,9 +9,9 @@ const ctx: RuleContext = {
 };
 
 describe("matchRule", () => {
-  it("returns CSSObject when the regex matches", () => {
+  it("returns the CSSObject and rule index when the regex matches", () => {
     const rules: Rule[] = [[/^m-([.\d]+)$/, ([, num]) => ({ margin: `${num}px` })]];
-    expect(matchRule("m-1", rules, ctx)).toEqual({ margin: "1px" });
+    expect(matchRule("m-1", rules, ctx)).toEqual({ css: { margin: "1px" }, index: 0 });
   });
 
   it("returns undefined when no rule matches", () => {
@@ -24,7 +24,7 @@ describe("matchRule", () => {
       [/^m-(\d+)$/, ([, num]) => ({ margin: `${num}px` })],
       [/^m-(\d+)$/, ([, num]) => ({ margin: `${num}rem` })],
     ];
-    expect(matchRule("m-1", rules, ctx)).toEqual({ margin: "1px" });
+    expect(matchRule("m-1", rules, ctx)).toEqual({ css: { margin: "1px" }, index: 0 });
   });
 
   it("falls through when the first handler returns undefined", () => {
@@ -32,6 +32,25 @@ describe("matchRule", () => {
       [/^m-(\d+)$/, () => undefined],
       [/^m-(\d+)$/, ([, num]) => ({ margin: `${num}rem` })],
     ];
-    expect(matchRule("m-1", rules, ctx)).toEqual({ margin: "1rem" });
+    expect(matchRule("m-1", rules, ctx)).toEqual({ css: { margin: "1rem" }, index: 1 });
+  });
+
+  it("supports CSSEntries results (duplicate properties for fallbacks)", () => {
+    const rules: Rule[] = [
+      [
+        /^stack$/,
+        () => [
+          ["display", "-webkit-box"],
+          ["display", "flex"],
+        ],
+      ],
+    ];
+    expect(matchRule("stack", rules, ctx)).toEqual({
+      css: [
+        ["display", "-webkit-box"],
+        ["display", "flex"],
+      ],
+      index: 0,
+    });
   });
 });
