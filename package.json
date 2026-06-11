@@ -45,8 +45,7 @@
     "test": "vp test",
     "typecheck": "tsc --noEmit",
     "release": "bumpp",
-    "prepublishOnly": "pnpm run typecheck && vp test --run && pnpm run build",
-    "prepare": "vp config"
+    "prepublishOnly": "pnpm run typecheck && vp test --run && pnpm run build"
   },
   "dependencies": {
     "tinyglobby": "^0.2.17",
