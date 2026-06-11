@@ -59,7 +59,17 @@ describe("vite plugin configFile option", () => {
 
   type LoosePlugin = {
     configResolved: (c: { root: string; command?: string }) => Promise<void>;
-    transform: (this: { addWatchFile(id: string): void }, code: string, id: string) => Promise<{ code: string } | null>;
+    transform: (
+      this: { addWatchFile(id: string): void; error(msg: string): never },
+      code: string,
+      id: string,
+    ) => Promise<{ code: string } | null>;
+  };
+  const transformCtx = {
+    addWatchFile() {},
+    error(msg: string): never {
+      throw new Error(msg);
+    },
   };
 
   it("drives the generator from the explicitly configured file", async () => {
@@ -67,7 +77,7 @@ describe("vite plugin configFile option", () => {
     await writeFile(join(dir, "conf", "custom.regexcss.ts"), CONFIG_TS, "utf8");
     const plugin = regexcss({ configFile: "conf/custom.regexcss.ts" }) as unknown as LoosePlugin;
     await plugin.configResolved({ root: dir });
-    const res = await plugin.transform.call({ addWatchFile() {} }, `@import "regexcss";`, join(dir, "main.css"));
+    const res = await plugin.transform.call(transformCtx, `@import "regexcss";`, join(dir, "main.css"));
     expect(res?.code).toContain(".m-1 { margin: 1px; }");
   });
 
@@ -87,7 +97,25 @@ describe("vite plugin configFile option", () => {
       configFile: "conf/custom.regexcss.ts",
     }) as unknown as LoosePlugin;
     await plugin.configResolved({ root: dir });
-    const res = await plugin.transform.call({ addWatchFile() {} }, `@import "regexcss";`, join(dir, "main.css"));
+    const res = await plugin.transform.call(transformCtx, `@import "regexcss";`, join(dir, "main.css"));
     expect(res?.code).toContain(".m-1 { margin: 1rem; }");
+  });
+
+  it("errors with the actual cause when CSS imports regexcss but no config exists", async () => {
+    // no regexcss.config.* anywhere — auto-discovery finds nothing
+    const plugin = regexcss() as unknown as LoosePlugin;
+    await plugin.configResolved({ root: dir });
+    // without this, the raw @import "regexcss" reaches vite:css, which resolves it
+    // to the package's JS entry and LightningCSS fails with a cryptic parse error
+    await expect(plugin.transform.call(transformCtx, `@import "regexcss";`, join(dir, "main.css"))).rejects.toThrow(
+      /no config was loaded/,
+    );
+  });
+
+  it("leaves CSS without the regexcss import alone even when no config exists", async () => {
+    const plugin = regexcss() as unknown as LoosePlugin;
+    await plugin.configResolved({ root: dir });
+    const res = await plugin.transform.call(transformCtx, `.foo { color: red; }`, join(dir, "main.css"));
+    expect(res).toBeNull();
   });
 });

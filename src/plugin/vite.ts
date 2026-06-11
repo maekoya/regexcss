@@ -82,6 +82,7 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
   let loggedConfigSummary = false;
   let warnedEmptyContent = false;
   let checkedPrefix = false;
+  let warnedNoConfig = false;
   let configLoadCount = 0;
 
   // Forward generator diagnostics (variant group collisions, variant typos) to the
@@ -194,6 +195,7 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
     loggedConfigSummary = false;
     warnedEmptyContent = false;
     checkedPrefix = false;
+    warnedNoConfig = false;
     configLoadCount++;
     invalidateScanCache();
     await rescanTokens();
@@ -244,7 +246,17 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
 
     async load(id) {
       if (id !== RESOLVED_ID) return undefined;
-      if (!generator) return "/* regexcss: no config loaded */";
+      if (!generator) {
+        if (!warnedNoConfig) {
+          warnedNoConfig = true;
+          this.environment?.logger?.warn(
+            `[regexcss] ${VIRTUAL_ID} was requested but no config was loaded — ` +
+              `add regexcss.config.{ts,mts,js,mjs,cjs} at the Vite root (${root}), ` +
+              `or pass \`config\` / \`configFile\` to the regexcss plugin`,
+          );
+        }
+        return "/* regexcss: no config loaded */";
+      }
       await rescanTokens();
       const { css, warnings } = await generator.generate(tokens);
       logScanDiagnostics(this.environment?.logger);
@@ -261,13 +273,22 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       const file = id.split("?", 1)[0] ?? id;
       if (!file.endsWith(".css")) return null;
       if (file.includes("/node_modules/")) return null;
-      if (!generator) return null;
       if (!CSS_IMPORT_RE.test(code)) {
         // this file (no longer) embeds generated CSS — drop it from the refresh list
         cssImporters.delete(id);
         return null;
       }
       CSS_IMPORT_RE.lastIndex = 0;
+      if (!generator) {
+        // Left untouched, `@import "regexcss"` would resolve to this package's JS
+        // entry and LightningCSS would die on it with a cryptic
+        // `Unexpected token Ident("as")` — fail here with the actual cause instead.
+        this.error(
+          `[regexcss] this file imports "regexcss" but no config was loaded — ` +
+            `add regexcss.config.{ts,mts,js,mjs,cjs} at the Vite root (${root}), ` +
+            `or pass \`config\` / \`configFile\` to the regexcss plugin`,
+        );
+      }
       cssImporters.add(id);
 
       await rescanTokens();
