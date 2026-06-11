@@ -126,6 +126,14 @@ const collisionWarning = (
   };
 };
 
+// A token that went through at least one variant was clearly written as a utility,
+// so a rule miss on the remainder is high-signal (typo / missing rule) — unlike the
+// general `unmatched` set, which is mostly extractor noise.
+const variantUnmatchedWarning = (raw: string, residue: string): GenerateWarning => ({
+  token: raw,
+  message: `variants applied but the remainder "${residue}" matched no rule — likely a typo or a missing rule`,
+});
+
 export const createGenerator = (userConfig: UserConfig): Generator => {
   const config = resolveConfig(userConfig);
   // Per-token memo. Config (rules/variants) is fixed for a generator's lifetime and
@@ -174,7 +182,11 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
       // none. matchRule still runs so the warning can say the residue would match.
       const collided = collidedGroups.length > 0;
       const produced = !collided && match !== undefined && decls.length > 0;
-      const warning = collided ? collisionWarning(raw, collidedGroups, matcher, match !== undefined) : undefined;
+      const warning = collided
+        ? collisionWarning(raw, collidedGroups, matcher, match !== undefined)
+        : !produced && chain.length > 0
+          ? variantUnmatchedWarning(raw, matcher)
+          : undefined;
       if (warning) warnings.push(warning);
 
       if (!produced) {

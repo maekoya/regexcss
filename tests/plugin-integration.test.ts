@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { createServer, type ViteDevServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createVariant } from "../src/helpers.ts";
-import type { Rule } from "../src/types.ts";
+import type { Rule, UserConfig } from "../src/types.ts";
 import regexcss from "../src/vite.ts";
 
 const rules: Rule[] = [[/^mt-(\d+)$/, ([, n]) => ({ "margin-top": `${n}px` })]];
@@ -135,5 +135,106 @@ describe("vite plugin end-to-end (dev server)", () => {
     expect(warnLogs.length).toBe(count);
     // and the colliding token produced no CSS
     expect(await cssCode()).not.toContain("md\\:sm");
+  });
+});
+
+// Separate short-lived servers per case: these diagnostics are one-shot per config
+// lifetime, so sharing the main server would make tests order-dependent.
+describe("plugin diagnostics (dev server)", () => {
+  const cleanups: Array<() => Promise<void>> = [];
+
+  type BootOptions = {
+    html?: string;
+    config: UserConfig;
+    verbose?: boolean;
+  };
+  const boot = async ({ html, config, verbose }: BootOptions) => {
+    const dir = await realpath(await mkdtemp(join(tmpdir(), "regexcss-diag-")));
+    if (html !== undefined) await writeFile(join(dir, "index.html"), html, "utf8");
+    await writeFile(join(dir, "main.css"), `@import "regexcss";\n`, "utf8");
+    const server = await createServer({
+      root: dir,
+      configFile: false,
+      logLevel: "silent",
+      server: { middlewareMode: true, ws: false },
+      plugins: [regexcss({ config, ...(verbose !== undefined ? { verbose } : {}) })],
+    });
+    const infos: string[] = [];
+    const warns: string[] = [];
+    const logger = server.environments.client.logger;
+    const origInfo = logger.info.bind(logger);
+    logger.info = (msg, opts) => {
+      infos.push(String(msg));
+      origInfo(msg, opts);
+    };
+    const origWarn = logger.warn.bind(logger);
+    logger.warn = (msg, opts) => {
+      warns.push(String(msg));
+      origWarn(msg, opts);
+    };
+    cleanups.push(async () => {
+      await server.close();
+      await rm(dir, { recursive: true, force: true });
+    });
+    const load = async () => (await server.transformRequest("/main.css"))?.code ?? "";
+    return { dir, server, infos, warns, load };
+  };
+
+  afterAll(async () => {
+    await Promise.all(cleanups.map((c) => c()));
+  });
+
+  it("logs a config summary and warns about variant typos", async () => {
+    const { infos, warns, load } = await boot({
+      html: `<div class="mt-10 md:mt-x"></div>`,
+      config: { rules, variants, content: { include: ["index.html"] } },
+    });
+    await load();
+    expect(infos.some((m) => m.includes("config loaded (inline config) — 1 rules, 2 variants, 1 content files"))).toBe(
+      true,
+    );
+    expect(warns.some((m) => m.includes(`token "md:mt-x"`) && m.includes("matched no rule"))).toBe(true);
+  });
+
+  it("warns when content globs match no files", async () => {
+    const { warns, load } = await boot({
+      config: { rules, content: { include: ["does-not-exist/*.html"] } },
+    });
+    await load();
+    expect(warns.some((m) => m.includes("content.include matched no files"))).toBe(true);
+  });
+
+  it("warns when a prefix is set but no scanned token uses it", async () => {
+    const { warns, load } = await boot({
+      html: `<div class="mt-10"></div>`,
+      config: { rules, prefix: "tw-", content: { include: ["index.html"] } },
+    });
+    await load();
+    expect(warns.some((m) => m.includes(`prefix "tw-" is set but none`))).toBe(true);
+  });
+
+  it("verbose: logs the token diff verdict for HMR updates", async () => {
+    const { dir, server, infos, load } = await boot({
+      html: `<div class="mt-10"></div>`,
+      config: { rules, content: { include: ["index.html"] } },
+      verbose: true,
+    });
+    await load();
+
+    const htmlPath = join(dir, "index.html");
+    await writeFile(htmlPath, `<div class="mt-20"></div>`, "utf8");
+    server.watcher.emit("change", htmlPath);
+    for (let i = 0; i < 50 && !infos.some((m) => m.includes("token set changed")); i++) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    expect(infos.some((m) => m.includes("index.html: token set changed (+1 −1) — refreshing CSS"))).toBe(true);
+
+    // whitespace-only edit — the default extractor sees the identical token set
+    await writeFile(htmlPath, `<div   class="mt-20"></div>`, "utf8");
+    server.watcher.emit("change", htmlPath);
+    for (let i = 0; i < 50 && !infos.some((m) => m.includes("no utility change")); i++) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    expect(infos.some((m) => m.includes("index.html: no utility change — leaving HMR to Vite"))).toBe(true);
   });
 });

@@ -162,8 +162,9 @@ export interface GenerateResult {
    */
   unmatched: Set<string>;
   /**
-   * Per-token diagnostics, currently variant-group collisions (`md:sm:` style). Unlike
-   * `unmatched` these are high-signal: the token clearly used variant syntax on purpose.
+   * Per-token diagnostics: variant-group collisions (`md:sm:` style) and tokens whose
+   * variants applied but whose remainder matched no rule (`hover:bg-rose-500` typos).
+   * Unlike `unmatched` these are high-signal: the token clearly used variant syntax.
    */
   warnings: GenerateWarning[];
 }

@@ -1,3 +1,4 @@
+import { relative } from "node:path";
 import type { EnvironmentModuleNode, Plugin, ViteDevServer } from "vite";
 import { loadUserConfig } from "../config/load.ts";
 import { createGenerator } from "../core/generator.ts";
@@ -19,6 +20,18 @@ const CSS_IMPORT_RE = /@import\s+["']regexcss["'](?:\s+layer\(([^()]+)\))?;?/g;
 
 export interface PluginOptions {
   config?: UserConfig;
+  /**
+   * Log HMR decisions (token diff per change, refresh vs. default HMR, config
+   * reloads) to the Vite logger. Off by default — diagnostics that indicate a
+   * problem (collisions, typos, empty globs) are always logged regardless.
+   */
+  verbose?: boolean;
+}
+
+// The slice of Vite's per-environment Logger the plugin uses.
+interface PluginLogger {
+  info(msg: string): void;
+  warn(msg: string): void;
 }
 
 const setsEqual = (a: Set<string>, b: Set<string>): boolean => {
@@ -57,15 +70,59 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
   // Tokens already warned about — generate() re-reports cached warnings on every call,
   // so without this every HMR pass would repeat them. Cleared on config rebuild.
   const warnedTokens = new Set<string>();
+  // One-shot flags for the config/scan diagnostics below. Cleared on config rebuild.
+  let loggedConfigSummary = false;
+  let warnedEmptyContent = false;
+  let checkedPrefix = false;
+  let configLoadCount = 0;
 
-  // Forward generator diagnostics (variant group collisions etc.) to the Vite log,
-  // once per token. `logger` is the per-environment logger from the hook context.
-  const logWarnings = (warnings: GenerateWarning[], logger: { warn(msg: string): void } | undefined): void => {
+  // Forward generator diagnostics (variant group collisions, variant typos) to the
+  // Vite log, once per token. `logger` is the per-environment logger from the hook.
+  const logWarnings = (warnings: GenerateWarning[], logger: PluginLogger | undefined): void => {
     if (!logger) return;
     for (const w of warnings) {
       if (warnedTokens.has(w.token)) continue;
       warnedTokens.add(w.token);
       logger.warn(`[regexcss] token "${w.token}": ${w.message}`);
+    }
+  };
+
+  // Config/scan-level diagnostics, emitted once per config lifetime from the first
+  // hook that both has a logger and runs after a scan (load/transform; configResolved
+  // has no environment logger).
+  const logScanDiagnostics = (logger: PluginLogger | undefined): void => {
+    if (!logger || !generator) return;
+    const { rules, variants, prefix, content } = generator.config;
+
+    if (!loggedConfigSummary) {
+      loggedConfigSummary = true;
+      const source = configSources.length > 0 ? relative(root, configSources[0] ?? "") : "inline config";
+      const verb = configLoadCount > 1 ? "reloaded" : "loaded";
+      logger.info(
+        `[regexcss] config ${verb} (${source}) — ${rules.length} rules, ${variants.length} variants, ` +
+          `${contentFiles.size} content files, ${tokens.size} scanned tokens`,
+      );
+    }
+
+    if (!warnedEmptyContent && content.include.length > 0 && contentFiles.size === 0) {
+      warnedEmptyContent = true;
+      logger.warn(`[regexcss] content.include matched no files — check your globs: ${JSON.stringify(content.include)}`);
+    }
+
+    if (!checkedPrefix && prefix !== "" && tokens.size > 0) {
+      checkedPrefix = true;
+      let anyPrefixed = false;
+      for (const t of tokens) {
+        if (t.startsWith(prefix)) {
+          anyPrefixed = true;
+          break;
+        }
+      }
+      if (!anyPrefixed) {
+        logger.warn(
+          `[regexcss] prefix "${prefix}" is set but none of the ${tokens.size} scanned tokens start with it — all utilities will be skipped`,
+        );
+      }
     }
   };
 
@@ -121,6 +178,10 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
     }
     generator = createGenerator(userConfig);
     warnedTokens.clear();
+    loggedConfigSummary = false;
+    warnedEmptyContent = false;
+    checkedPrefix = false;
+    configLoadCount++;
     invalidateScanCache();
     await rescanTokens();
   };
@@ -173,6 +234,7 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       if (!generator) return "/* regexcss: no config loaded */";
       await rescanTokens();
       const { css, warnings } = await generator.generate(tokens);
+      logScanDiagnostics(this.environment?.logger);
       logWarnings(warnings, this.environment?.logger);
       watchAll((f) => this.addWatchFile(f));
       return css;
@@ -196,6 +258,7 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       cssImporters.add(id);
 
       await rescanTokens();
+      logScanDiagnostics(this.environment?.logger);
       watchAll((f) => this.addWatchFile(f));
 
       // 同一ファイル内に複数の @import がある場合も layer 別に1度だけ generate
@@ -237,6 +300,11 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
         const key = `${ctx.timestamp}:${ctx.file}`;
         if (lastConfigReloadKey !== key) {
           lastConfigReloadKey = key;
+          if (options.verbose) {
+            this.environment.logger.info(
+              `[regexcss] ${relative(root, ctx.file)} changed — rebuilding config, full reload`,
+            );
+          }
           try {
             await rebuildGenerator();
           } catch (error) {
@@ -281,6 +349,20 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
           }
         }
         lastTokenDiff = { key, changed: !setsEqual(before, tokens) };
+        if (options.verbose) {
+          const file = relative(root, ctx.file);
+          if (lastTokenDiff.changed) {
+            let added = 0;
+            for (const t of tokens) if (!before.has(t)) added++;
+            let removed = 0;
+            for (const t of before) if (!tokens.has(t)) removed++;
+            this.environment.logger.info(
+              `[regexcss] ${file}: token set changed (+${added} −${removed}) — refreshing CSS`,
+            );
+          } else {
+            this.environment.logger.info(`[regexcss] ${file}: no utility change — leaving HMR to Vite`);
+          }
+        }
       }
       // Utility token set unchanged → leave the default HMR for this file as-is.
       // This is the common case (edits that don't touch class lists) and keeps

@@ -180,6 +180,22 @@ describe("createGenerator", () => {
     expect(warnings[0]?.message).toContain("the token was suppressed");
   });
 
+  it("warns when variants applied but the remainder matches no rule (typo)", async () => {
+    const gen = createGenerator({ rules, variants });
+    const { matched, warnings } = await gen.generate(["hover:m-x", "hover:m-1"]);
+    expect(matched.has("hover:m-1")).toBe(true);
+    expect(warnings).toEqual([
+      { token: "hover:m-x", message: expect.stringContaining(`the remainder "m-x" matched no rule`) },
+    ]);
+  });
+
+  it("does not warn for unmatched tokens that never went through a variant", async () => {
+    const gen = createGenerator({ rules, variants });
+    const { unmatched, warnings } = await gen.generate(["totally-random-word"]);
+    expect(unmatched.has("totally-random-word")).toBe(true);
+    expect(warnings).toEqual([]);
+  });
+
   it("escapes a leading digit in variant-prefixed tokens", async () => {
     const v: Variant[] = [[/^2xl:/, (_, raw) => ({ matcher: raw.slice(4), parent: "@media (--2xl)" })]];
     const { css } = await createGenerator({ rules, variants: v }).generate(["2xl:m-1"]);
