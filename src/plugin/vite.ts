@@ -19,7 +19,15 @@ const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 const CSS_IMPORT_RE = /@import\s+["']regexcss["'](?:\s+layer\(([^()]+)\))?;?/g;
 
 export interface PluginOptions {
+  /** Inline config. Takes precedence over `configFile` and auto-discovery. */
   config?: UserConfig;
+  /**
+   * Explicit config file path, resolved against the Vite root. Unlike the default
+   * auto-discovery (`regexcss.config.{ts,mts,js,mjs,cjs}` at the root), the path is
+   * used verbatim — extension included — and a missing file is a hard error rather
+   * than "no config". Changes to the file still hot-reload the config.
+   */
+  configFile?: string;
   /**
    * Log HMR decisions (token diff per change, refresh vs. default HMR, config
    * reloads) to the Vite logger. Off by default — diagnostics that indicate a
@@ -165,9 +173,14 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
   const buildGenerator = async (): Promise<void> => {
     let userConfig: UserConfig | undefined = options.config;
     if (!userConfig) {
-      const loaded = await loadUserConfig(root);
+      const loaded = await loadUserConfig(root, options.configFile);
       userConfig = loaded.config;
       configSources = loaded.sources;
+      // an explicitly requested file that doesn't resolve is a setup error, not
+      // "no config" — fail loudly (on reload, hotUpdate catches and keeps the old one)
+      if (options.configFile !== undefined && userConfig === undefined) {
+        throw new Error(`[regexcss] configFile not found or empty: "${options.configFile}" (resolved against ${root})`);
+      }
     }
     if (!userConfig) {
       generator = undefined;

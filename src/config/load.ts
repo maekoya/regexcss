@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { loadConfig } from "unconfig";
 import type { UserConfig } from "../types.ts";
 
@@ -6,14 +7,27 @@ export interface LoadedConfig {
   sources: string[];
 }
 
-export const loadUserConfig = async (cwd: string): Promise<LoadedConfig> => {
+/**
+ * Load the regexcss config. With `configFile` the exact path (resolved against `cwd`)
+ * is loaded — extension included, no name guessing. Without it, `regexcss.config.*`
+ * is auto-discovered from `cwd`.
+ */
+export const loadUserConfig = async (cwd: string, configFile?: string): Promise<LoadedConfig> => {
   const result = await loadConfig<UserConfig>({
-    sources: [
-      {
-        files: "regexcss.config",
-        extensions: ["ts", "mts", "js", "mjs", "cjs"],
-      },
-    ],
+    sources: configFile
+      ? [
+          {
+            // an empty extensions list makes unconfig use the path verbatim
+            files: resolve(cwd, configFile),
+            extensions: [],
+          },
+        ]
+      : [
+          {
+            files: "regexcss.config",
+            extensions: ["ts", "mts", "js", "mjs", "cjs"],
+          },
+        ],
     cwd,
     merge: false,
   });
