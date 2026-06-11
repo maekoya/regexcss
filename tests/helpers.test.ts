@@ -88,6 +88,18 @@ describe("createVariant", () => {
     expect(result?.parent).toBe("@media (prefers-color-scheme: dark)");
     expect(result?.selector).toBeUndefined();
   });
+
+  it("passes the exclusivity group through to the handler result", () => {
+    const [, handler] = createVariant("md", { parent: "@media (--md)", group: "window-size" });
+    const result = handler(["md:"] as unknown as RegExpMatchArray, "md:m-4");
+    expect(result?.group).toBe("window-size");
+  });
+
+  it("omits the group key when not configured", () => {
+    const [, handler] = createVariant("md", { parent: "@media (--md)" });
+    const result = handler(["md:"] as unknown as RegExpMatchArray, "md:m-4");
+    expect(result && "group" in result).toBe(false);
+  });
 });
 
 describe("parseCustomMedia", () => {

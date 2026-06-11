@@ -3,10 +3,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer, type ViteDevServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createVariant } from "../src/helpers.ts";
 import type { Rule } from "../src/types.ts";
 import regexcss from "../src/vite.ts";
 
 const rules: Rule[] = [[/^mt-(\d+)$/, ([, n]) => ({ "margin-top": `${n}px` })]];
+const variants = [
+  createVariant("sm", { parent: "@media (--sm)", group: "window-size" }),
+  createVariant("md", { parent: "@media (--md)", group: "window-size" }),
+];
 
 // Real Vite dev server (middleware mode, no sockets) driving the actual
 // watcher → hotUpdate → invalidate → re-transform pipeline. Regression test for
@@ -54,7 +59,7 @@ describe("vite plugin end-to-end (dev server)", () => {
       configFile: false,
       logLevel: "silent",
       server: { middlewareMode: true, ws: false },
-      plugins: [regexcss({ config: { rules, content: { include: ["index.html"] } } })],
+      plugins: [regexcss({ config: { rules, variants, content: { include: ["index.html"] } } })],
     });
     // record what Vite pushes to the (noop, ws-less) client hot channel
     const hot = server.environments.client.hot;
@@ -104,5 +109,31 @@ describe("vite plugin end-to-end (dev server)", () => {
     expect(await waitForPayload("full-reload")).toBe(true);
     const code = await cssCode();
     expect(code).toContain(".mt-100 { margin-top: 100px; }");
+  });
+
+  it("logs a variant-group collision to the Vite logger, once per token", async () => {
+    const warnLogs: string[] = [];
+    const logger = server.environments.client.logger;
+    const origWarn = logger.warn.bind(logger);
+    logger.warn = (msg, opts) => {
+      warnLogs.push(String(msg));
+      origWarn(msg, opts);
+    };
+
+    await writeFile(htmlPath, `<div class="mt-100 md:sm:mt-5"></div>`, "utf8");
+    server.watcher.emit("change", htmlPath);
+    // poll: re-transform of main.css emits the warning via the environment logger
+    for (let i = 0; i < 50 && warnLogs.length === 0; i++) {
+      await cssCode();
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    expect(warnLogs.some((m) => m.includes(`token "md:sm:mt-5"`) && m.includes(`"window-size"`))).toBe(true);
+
+    // a second pass over the same token must not repeat the warning
+    const count = warnLogs.length;
+    await cssCode();
+    expect(warnLogs.length).toBe(count);
+    // and the colliding token produced no CSS
+    expect(await cssCode()).not.toContain("md\\:sm");
   });
 });

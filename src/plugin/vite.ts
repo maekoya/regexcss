@@ -2,7 +2,7 @@ import type { EnvironmentModuleNode, Plugin, ViteDevServer } from "vite";
 import { loadUserConfig } from "../config/load.ts";
 import { createGenerator } from "../core/generator.ts";
 import { resolveFiles, scanFiles } from "../extractor/scan.ts";
-import type { Generator, UserConfig } from "../types.ts";
+import type { GenerateWarning, Generator, UserConfig } from "../types.ts";
 
 const VIRTUAL_ID = "virtual:regexcss.css";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -54,6 +54,20 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
   let lastConfigReloadKey: string | undefined;
   let lastTokenDiff: { key: string; changed: boolean } | undefined;
   let configReloadPromise: Promise<void> | undefined;
+  // Tokens already warned about — generate() re-reports cached warnings on every call,
+  // so without this every HMR pass would repeat them. Cleared on config rebuild.
+  const warnedTokens = new Set<string>();
+
+  // Forward generator diagnostics (variant group collisions etc.) to the Vite log,
+  // once per token. `logger` is the per-environment logger from the hook context.
+  const logWarnings = (warnings: GenerateWarning[], logger: { warn(msg: string): void } | undefined): void => {
+    if (!logger) return;
+    for (const w of warnings) {
+      if (warnedTokens.has(w.token)) continue;
+      warnedTokens.add(w.token);
+      logger.warn(`[regexcss] token "${w.token}": ${w.message}`);
+    }
+  };
 
   const invalidateScanCache = (): void => {
     scanDirty = true;
@@ -106,6 +120,7 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       return;
     }
     generator = createGenerator(userConfig);
+    warnedTokens.clear();
     invalidateScanCache();
     await rescanTokens();
   };
@@ -157,7 +172,8 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       if (id !== RESOLVED_ID) return undefined;
       if (!generator) return "/* regexcss: no config loaded */";
       await rescanTokens();
-      const { css } = await generator.generate(tokens);
+      const { css, warnings } = await generator.generate(tokens);
+      logWarnings(warnings, this.environment?.logger);
       watchAll((f) => this.addWatchFile(f));
       return css;
     },
@@ -189,7 +205,8 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       for (const m of matches) {
         const key = m[1]?.trim().replace(/^["']|["']$/g, "");
         if (blocks.has(key)) continue;
-        const { css } = await generator.generate(tokens, key !== undefined ? { layerName: key } : undefined);
+        const { css, warnings } = await generator.generate(tokens, key !== undefined ? { layerName: key } : undefined);
+        logWarnings(warnings, this.environment?.logger);
         blocks.set(key, css);
       }
 

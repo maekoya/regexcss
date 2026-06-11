@@ -137,6 +137,49 @@ describe("createGenerator", () => {
     expect(css).toBe(".stack { display: -webkit-box; display: flex; }");
   });
 
+  it("drops tokens that stack variants from the same exclusivity group, with a warning", async () => {
+    const grouped: Variant[] = [
+      [/^sm:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--sm)", group: "window-size" })],
+      [/^md:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--md)", group: "window-size" })],
+    ];
+    const gen = createGenerator({ rules, variants: grouped });
+    const { css, matched, unmatched, warnings } = await gen.generate(["md:sm:m-1", "md:m-2"]);
+    // the colliding token emits nothing; the clean one is unaffected
+    expect(matched.has("md:sm:m-1")).toBe(false);
+    expect(unmatched.has("md:sm:m-1")).toBe(true);
+    expect(css).not.toContain("md\\:sm");
+    expect(css).toContain(".md\\:m-2");
+    expect(warnings).toEqual([
+      { token: "md:sm:m-1", message: expect.stringContaining('"window-size" used more than once; token ignored') },
+    ]);
+  });
+
+  it("repeats group-collision warnings from the memo cache on later calls", async () => {
+    const grouped: Variant[] = [
+      [/^md:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--md)", group: "window-size" })],
+    ];
+    const gen = createGenerator({ rules, variants: grouped });
+    await gen.generate(["md:md:m-1"]);
+    const { warnings } = await gen.generate(["md:md:m-1"]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.token).toBe("md:md:m-1");
+  });
+
+  it("suppresses the token even when the post-collision residue matches a rule", async () => {
+    const grouped: Variant[] = [
+      [/^md:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--md)", group: "window-size" })],
+    ];
+    // pathological: a rule that matches the residue including the leftover prefix
+    const greedy: Rule[] = [[/^md:m-(\d+)$/, ([, n]) => ({ margin: `${n}px` })]];
+    const gen = createGenerator({ rules: greedy, variants: grouped });
+    const { css, matched, unmatched, warnings } = await gen.generate(["md:md:m-1"]);
+    // no half-applied CSS — a collision always drops the token
+    expect(css).toBe("");
+    expect(matched.has("md:md:m-1")).toBe(false);
+    expect(unmatched.has("md:md:m-1")).toBe(true);
+    expect(warnings[0]?.message).toContain("the token was suppressed");
+  });
+
   it("escapes a leading digit in variant-prefixed tokens", async () => {
     const v: Variant[] = [[/^2xl:/, (_, raw) => ({ matcher: raw.slice(4), parent: "@media (--2xl)" })]];
     const { css } = await createGenerator({ rules, variants: v }).generate(["2xl:m-1"]);

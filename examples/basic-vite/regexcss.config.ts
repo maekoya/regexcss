@@ -38,8 +38,14 @@ export default defineConfig({
     ],
   ],
   variants: [
+    // group: 同一トークン内で window-size 系 variant は1つまで（md:sm:〜 を弾く）
     createVariant("md", {
       parent: "@media (--md)",
+      group: "window-size",
+    }),
+    createVariant("sm", {
+      parent: "@media (--sm)",
+      group: "window-size",
     }),
     createVariant("hover", {
       selector: ":hover",

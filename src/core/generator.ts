@@ -2,6 +2,7 @@ import { defaultExtractor } from "../extractor/tokenize.ts";
 import type {
   GenerateOptions,
   GenerateResult,
+  GenerateWarning,
   Generator,
   ResolvedConfig,
   UserConfig,
@@ -104,17 +105,38 @@ const wrapNested = (parents: string[], inner: string): string => {
   return acc;
 };
 
+interface CacheEntry {
+  // `null` records "passed the prefix filter but matched no rule"
+  block: Block | null;
+  warning?: GenerateWarning;
+}
+
+const collisionWarning = (
+  raw: string,
+  collidedGroups: string[],
+  residue: string,
+  residueMatched: boolean,
+): GenerateWarning => {
+  const groups = collidedGroups.map((g) => JSON.stringify(g)).join(", ");
+  return {
+    token: raw,
+    message: residueMatched
+      ? `variant group ${groups} used more than once; the remainder "${residue}" even matched a rule, but the token was suppressed — check your variants/rules`
+      : `variant group ${groups} used more than once; token ignored`,
+  };
+};
+
 export const createGenerator = (userConfig: UserConfig): Generator => {
   const config = resolveConfig(userConfig);
   // Per-token memo. Config (rules/variants) is fixed for a generator's lifetime and
-  // handlers are required to be pure, so a token always produces the same block.
-  // `null` records "passed the prefix filter but matched no rule".
-  const cache = new Map<string, Block | null>();
+  // handlers are required to be pure, so a token always produces the same result.
+  const cache = new Map<string, CacheEntry>();
 
   const generate = async (tokens: Iterable<string>, options?: GenerateOptions): Promise<GenerateResult> => {
     const seen = new Set<string>();
     const matched = new Set<string>();
     const unmatched = new Set<string>();
+    const warnings: GenerateWarning[] = [];
     const blocks: Block[] = [];
 
     for (const raw of tokens) {
@@ -129,16 +151,17 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
 
       const cached = cache.get(raw);
       if (cached !== undefined) {
-        if (cached === null) {
+        if (cached.block === null) {
           unmatched.add(raw);
         } else {
-          blocks.push(cached);
+          blocks.push(cached.block);
           matched.add(raw);
         }
+        if (cached.warning) warnings.push(cached.warning);
         continue;
       }
 
-      const { matcher, chain, variantIndexes } = applyVariantChain(matcherInput, config.variants);
+      const { matcher, chain, variantIndexes, collidedGroups } = applyVariantChain(matcherInput, config.variants);
       const ctx = {
         rawSelector: raw,
         currentSelector: matcher,
@@ -146,8 +169,16 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
       };
       const match = matchRule(matcher, config.rules, ctx);
       const decls = match ? stringifyDeclarations(match.css) : "";
-      if (!match || decls.length === 0) {
-        cache.set(raw, null);
+      // A group collision always suppresses the token: `md:sm:…` is a near-certain
+      // typo, and half-applied CSS (only the first variant's wrapper) is worse than
+      // none. matchRule still runs so the warning can say the residue would match.
+      const collided = collidedGroups.length > 0;
+      const produced = !collided && match !== undefined && decls.length > 0;
+      const warning = collided ? collisionWarning(raw, collidedGroups, matcher, match !== undefined) : undefined;
+      if (warning) warnings.push(warning);
+
+      if (!produced) {
+        cache.set(raw, { block: null, ...(warning ? { warning } : {}) });
         unmatched.add(raw);
         continue;
       }
@@ -157,10 +188,10 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
         selector: buildSelector(raw, chain),
         parents: collectParents(chain),
         decls,
-        ruleIndex: match.index,
+        ruleIndex: match?.index ?? 0,
         variantIndexes,
       };
-      cache.set(raw, block);
+      cache.set(raw, { block, ...(warning ? { warning } : {}) });
       blocks.push(block);
       matched.add(raw);
     }
@@ -170,7 +201,7 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
     const layered = renderLayer(body, effectiveLayerName);
     const cmDecl = renderCustomMedia(config.customMedia);
     const css = cmDecl ? (layered ? `${cmDecl}\n\n${layered}` : cmDecl) : layered;
-    return { css, matched, unmatched };
+    return { css, matched, unmatched, warnings };
   };
 
   return { generate, config };

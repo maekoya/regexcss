@@ -53,6 +53,13 @@ export interface VariantHandlerResult {
   selector?: (sel: string) => string;
   /** Optional at-rule that wraps the produced rule, e.g. `"@media (--md)"`. */
   parent?: string;
+  /**
+   * Exclusivity group. Within one token's variant chain, at most one variant per group is
+   * applied — a second match from the same group (e.g. `md:sm:` with both in
+   * `"window-size"`) is skipped, the residue matches no rule, and the token is dropped
+   * with a {@link GenerateWarning}. Stacking contradictory media queries is the use case.
+   */
+  group?: string;
 }
 
 /** Variant handler signature. Return `undefined` to leave the token unchanged. */
@@ -134,6 +141,14 @@ export interface ResolvedConfig {
   extractor: (code: string) => Iterable<string>;
 }
 
+/** A per-token diagnostic produced during generation (e.g. a variant group collision). */
+export interface GenerateWarning {
+  /** The raw token the warning is about, as it appeared in source. */
+  token: string;
+  /** Human-readable description; the Vite plugin forwards it to the environment logger. */
+  message: string;
+}
+
 /** Output of a single `Generator.generate` call. */
 export interface GenerateResult {
   /** The fully-rendered CSS string. May include `@custom-media`, `@layer`, etc. */
@@ -146,6 +161,11 @@ export interface GenerateResult {
    * is mainly useful with a targeted extractor or for ad-hoc debugging.
    */
   unmatched: Set<string>;
+  /**
+   * Per-token diagnostics, currently variant-group collisions (`md:sm:` style). Unlike
+   * `unmatched` these are high-signal: the token clearly used variant syntax on purpose.
+   */
+  warnings: GenerateWarning[];
 }
 
 /** Per-call options for {@link Generator.generate}. */

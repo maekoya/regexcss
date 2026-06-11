@@ -7,6 +7,7 @@ export type {
   CSSObject,
   GenerateOptions,
   GenerateResult,
+  GenerateWarning,
   Generator,
   ResolvedConfig,
   Rule,
