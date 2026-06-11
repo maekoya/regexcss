@@ -1,7 +1,7 @@
-# regexcss
+# Regexcss
 
 > 🚧 README is being rewritten. Documentation coming soon.
 
 ## License
 
-MIT © 2026 maekoya
+MIT © maekoya

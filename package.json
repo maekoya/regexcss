@@ -1,7 +1,7 @@
 {
   "name": "regexcss",
   "version": "0.2.1",
-  "description": "Minimal, user-defined CSS utility library inspired by UnoCSS/Tailwind",
+  "description": "Zero-preset CSS utility engine powered by user-defined regex rules",
   "keywords": [
     "atomic-css",
     "css",
