@@ -1,6 +1,6 @@
 {
   "name": "regexcss",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Zero-preset CSS utility engine powered by user-defined regex rules",
   "keywords": [
     "atomic-css",
