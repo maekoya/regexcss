@@ -5,5 +5,6 @@
 export * from "./rules/color/index.ts";
 export * from "./rules/flexbox-grid/index.ts";
 export * from "./rules/layout/index.ts";
+export * from "./rules/sizing/index.ts";
 export * from "./rules/spacing/index.ts";
 export * from "./rules/typography/index.ts";
