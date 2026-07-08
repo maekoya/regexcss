@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
 import {
+  createLineClampRules,
   fontFamilyRules,
   fontStyleRules,
   fontVariantNumericRules,
@@ -104,12 +105,22 @@ describe("line-clamp", () => {
       "-webkit-box-orient": "vertical",
       "-webkit-line-clamp": "3",
     });
-    expect(match("line-clamp-12", lineClampRules)).toEqual({
+    expect(match("line-clamp-6", lineClampRules)).toEqual({
       overflow: "hidden",
       display: "-webkit-box",
       "-webkit-box-orient": "vertical",
-      "-webkit-line-clamp": "12",
+      "-webkit-line-clamp": "6",
     });
+  });
+
+  it("caps the line count at the default of 6", () => {
+    expect(match("line-clamp-7", lineClampRules)).toBeUndefined();
+  });
+
+  it("supports a custom cap via createLineClampRules", () => {
+    const rules = createLineClampRules({ max: 10 });
+    expect(match("line-clamp-10", rules)).toMatchObject({ "-webkit-line-clamp": "10" });
+    expect(match("line-clamp-11", rules)).toBeUndefined();
   });
 
   it("emits the reset block for line-clamp-none", () => {

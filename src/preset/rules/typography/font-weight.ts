@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // font-weight — https://tailwindcss.com/docs/font-weight
 const FONT_WEIGHT: Record<string, string> = {
@@ -13,9 +14,12 @@ const FONT_WEIGHT: Record<string, string> = {
   black: "900",
 };
 
-export const fontWeightRules: Rule[] = [
+export const fontWeightRules: Rule[] = withMeta(
   [
-    /^font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/,
-    ([, k]) => ({ "font-weight": FONT_WEIGHT[k ?? ""] ?? "" }),
+    [
+      /^font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/,
+      ([, k]) => ({ "font-weight": FONT_WEIGHT[k ?? ""] ?? "" }),
+    ],
   ],
-];
+  { label: "font-weight", category: "typography", tags: ["preset"] },
+);

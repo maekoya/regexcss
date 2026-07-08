@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // justify-content — https://tailwindcss.com/docs/justify-content
 const JUSTIFY_CONTENT: Record<string, string> = {
@@ -12,9 +13,12 @@ const JUSTIFY_CONTENT: Record<string, string> = {
   stretch: "stretch",
 };
 
-export const justifyContentRules: Rule[] = [
+export const justifyContentRules: Rule[] = withMeta(
   [
-    /^justify-(normal|start|end|center|between|around|evenly|stretch)$/,
-    ([, k]) => ({ "justify-content": JUSTIFY_CONTENT[k ?? ""] ?? "" }),
+    [
+      /^justify-(normal|start|end|center|between|around|evenly|stretch)$/,
+      ([, k]) => ({ "justify-content": JUSTIFY_CONTENT[k ?? ""] ?? "" }),
+    ],
   ],
-];
+  { label: "justify-content", category: "flexbox-grid", tags: ["preset"] },
+);

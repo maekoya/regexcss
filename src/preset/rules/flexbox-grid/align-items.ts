@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // align-items — https://tailwindcss.com/docs/align-items
 const ALIGN_ITEMS: Record<string, string> = {
@@ -9,6 +10,7 @@ const ALIGN_ITEMS: Record<string, string> = {
   stretch: "stretch",
 };
 
-export const alignItemsRules: Rule[] = [
-  [/^items-(start|end|center|baseline|stretch)$/, ([, k]) => ({ "align-items": ALIGN_ITEMS[k ?? ""] ?? "" })],
-];
+export const alignItemsRules: Rule[] = withMeta(
+  [[/^items-(start|end|center|baseline|stretch)$/, ([, k]) => ({ "align-items": ALIGN_ITEMS[k ?? ""] ?? "" })]],
+  { label: "align-items", category: "flexbox-grid", tags: ["preset"] },
+);

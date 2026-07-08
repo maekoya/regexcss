@@ -6,6 +6,7 @@ export default defineConfig({
     vite: "src/vite.ts",
     helpers: "src/helpers.ts",
     preset: "src/preset/index.ts",
+    cli: "src/cli.ts",
   },
   format: ["esm"],
   dts: true,

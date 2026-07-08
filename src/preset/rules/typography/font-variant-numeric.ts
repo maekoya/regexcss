@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // font-variant-numeric — https://tailwindcss.com/docs/font-variant-numeric
 // Tailwind composes these via CSS vars so they can stack (e.g. `ordinal tabular-nums`);
@@ -15,9 +16,12 @@ const VALUES: Record<string, string> = {
   "stacked-fractions": "stacked-fractions",
 };
 
-export const fontVariantNumericRules: Rule[] = [
+export const fontVariantNumericRules: Rule[] = withMeta(
   [
-    /^(normal-nums|ordinal|slashed-zero|lining-nums|oldstyle-nums|proportional-nums|tabular-nums|diagonal-fractions|stacked-fractions)$/,
-    ([, k]) => ({ "font-variant-numeric": VALUES[k ?? ""] ?? "" }),
+    [
+      /^(normal-nums|ordinal|slashed-zero|lining-nums|oldstyle-nums|proportional-nums|tabular-nums|diagonal-fractions|stacked-fractions)$/,
+      ([, k]) => ({ "font-variant-numeric": VALUES[k ?? ""] ?? "" }),
+    ],
   ],
-];
+  { label: "font-variant-numeric", category: "typography", tags: ["preset"] },
+);

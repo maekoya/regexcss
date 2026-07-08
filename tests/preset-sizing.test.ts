@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
 import {
+  createSizingRules,
+  createWidthRules,
   heightRules,
   maxHeightRules,
   maxWidthRules,
@@ -98,5 +100,43 @@ describe("preset sizing — size", () => {
 
   it("has no screen keyword (axes differ)", () => {
     expect(match("size-screen", sizeRules)).toBeUndefined();
+  });
+});
+
+describe("preset sizing — numeric cap", () => {
+  it("accepts values up to the default cap of 96 on every axis", () => {
+    expect(match("w-96", widthRules)).toEqual({ width: "24rem" });
+    expect(match("h-96", heightRules)).toEqual({ height: "24rem" });
+    expect(match("min-w-96", minWidthRules)).toEqual({ "min-width": "24rem" });
+    expect(match("max-h-96", maxHeightRules)).toEqual({ "max-height": "24rem" });
+  });
+
+  it("rejects values above the default cap", () => {
+    expect(match("w-97", widthRules)).toBeUndefined();
+    expect(match("h-97", heightRules)).toBeUndefined();
+    expect(match("size-97", sizeRules)).toBeUndefined();
+  });
+
+  it("supports a custom cap via the factories", () => {
+    const width = createWidthRules({ max: 10 });
+    expect(match("w-10", width)).toEqual({ width: "2.5rem" });
+    expect(match("w-11", width)).toBeUndefined();
+
+    const sizing = createSizingRules({ max: 10 });
+    expect(match("h-11", sizing)).toBeUndefined();
+  });
+});
+
+describe("preset sizing — fraction guard", () => {
+  it("accepts proper fractions with denominators up to 12", () => {
+    expect(match("w-1/2", widthRules)).toEqual({ width: "calc(1/2 * 100%)" });
+    expect(match("w-11/12", widthRules)).toEqual({ width: "calc(11/12 * 100%)" });
+  });
+
+  it("rejects improper or out-of-range fractions", () => {
+    expect(match("w-2/2", widthRules)).toBeUndefined();
+    expect(match("w-5/4", widthRules)).toBeUndefined();
+    expect(match("w-0/2", widthRules)).toBeUndefined();
+    expect(match("w-1/13", widthRules)).toBeUndefined();
   });
 });
