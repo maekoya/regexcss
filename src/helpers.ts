@@ -47,10 +47,26 @@ export const createVariant = (
     selector?: string | ((s: string) => string);
     parent?: string;
     group?: string;
+    /** Docs summary override. Defaults to a description built from selector / parent / group. */
+    note?: string;
+    /** Docs output-sample override. Defaults to a representative wrapped selector. */
+    sample?: string;
   },
 ): Variant => {
-  const { selector, parent, group } = options;
+  const { selector, parent, group, note, sample } = options;
   const selectorFn = typeof selector === "string" ? (s: string) => `${s}${selector}` : selector;
+  // human-readable overview for docs output (`regexcss docs`); the group is carried
+  // separately (shown as a chip), so it is not folded into this summary.
+  const summary =
+    [typeof selector === "string" ? `&${selector}` : selector ? "custom selector" : "", parent ?? ""]
+      .filter(Boolean)
+      .join(" · ") || undefined;
+  // representative output for docs: the prefixed, `\:`-escaped selector (with any
+  // selector transform applied) wrapped in the parent at-rule — `<utility>` stands
+  // in for whatever class the variant is used on.
+  const base = `.${prefix}\\:<utility>`;
+  const declBlock = `${selectorFn ? selectorFn(base) : base} { … }`;
+  const outputSample = parent ? `${parent} {\n  ${declBlock}\n}` : declBlock;
   return [
     new RegExp(`^${escapeRegExp(prefix)}:`),
     (_, raw) => ({
@@ -59,6 +75,7 @@ export const createVariant = (
       ...(parent ? { parent } : {}),
       ...(group !== undefined ? { group } : {}),
     }),
+    { label: prefix, ...(group !== undefined ? { group } : {}), note: note ?? summary, sample: sample ?? outputSample },
   ];
 };
 

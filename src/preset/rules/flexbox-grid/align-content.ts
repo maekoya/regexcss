@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // align-content — https://tailwindcss.com/docs/align-content
 const ALIGN_CONTENT: Record<string, string> = {
@@ -13,9 +14,12 @@ const ALIGN_CONTENT: Record<string, string> = {
   stretch: "stretch",
 };
 
-export const alignContentRules: Rule[] = [
+export const alignContentRules: Rule[] = withMeta(
   [
-    /^content-(normal|center|start|end|between|around|evenly|baseline|stretch)$/,
-    ([, k]) => ({ "align-content": ALIGN_CONTENT[k ?? ""] ?? "" }),
+    [
+      /^content-(normal|center|start|end|between|around|evenly|baseline|stretch)$/,
+      ([, k]) => ({ "align-content": ALIGN_CONTENT[k ?? ""] ?? "" }),
+    ],
   ],
-];
+  { label: "align-content", category: "flexbox-grid", tags: ["preset"] },
+);

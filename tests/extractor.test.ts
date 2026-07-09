@@ -16,4 +16,10 @@ describe("defaultExtractor", () => {
     expect(tokens).toContain("w-1/2");
     expect(tokens).toContain("m-1.5");
   });
+
+  it("keeps `~` and `-` symbol prefixes as part of the token", () => {
+    const tokens = defaultExtractor('<div class="~m-1/2 -m-4"></div>');
+    expect(tokens).toContain("~m-1/2");
+    expect(tokens).toContain("-m-4");
+  });
 });

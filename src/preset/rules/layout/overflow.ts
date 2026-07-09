@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // overflow — https://tailwindcss.com/docs/overflow
 const props: Record<string, string> = {
@@ -7,12 +8,15 @@ const props: Record<string, string> = {
   y: "overflow-y",
 };
 
-export const overflowRules: Rule[] = [
+export const overflowRules: Rule[] = withMeta(
   [
-    /^overflow(?:-([xy]))?-(auto|hidden|clip|visible|scroll)$/,
-    ([, dir, v]) => {
-      const prop = props[dir ?? ""];
-      return prop && v ? { [prop]: v } : undefined;
-    },
+    [
+      /^overflow(?:-([xy]))?-(auto|hidden|clip|visible|scroll)$/,
+      ([, dir, v]) => {
+        const prop = props[dir ?? ""];
+        return prop && v ? { [prop]: v } : undefined;
+      },
+    ],
   ],
-];
+  { label: "overflow", category: "layout", tags: ["preset"] },
+);

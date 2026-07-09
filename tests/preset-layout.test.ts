@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
 import {
+  createZIndexRules,
   displayRules,
   objectFitRules,
   objectPositionRules,
@@ -183,10 +184,18 @@ describe("preset layout z-index", () => {
     expect(match("z-auto", zIndexRules)).toEqual({ "z-index": "auto" });
   });
 
-  it("accepts any integer, not just the Tailwind 0-50 scale", () => {
+  it("accepts any integer up to the default cap of 10", () => {
     expect(match("z-0", zIndexRules)).toEqual({ "z-index": "0" });
-    expect(match("z-50", zIndexRules)).toEqual({ "z-index": "50" });
-    expect(match("z-999", zIndexRules)).toEqual({ "z-index": "999" });
+    expect(match("z-5", zIndexRules)).toEqual({ "z-index": "5" });
+    expect(match("z-10", zIndexRules)).toEqual({ "z-index": "10" });
+    expect(match("z-11", zIndexRules)).toBeUndefined();
+    expect(match("z-999", zIndexRules)).toBeUndefined();
+  });
+
+  it("supports a custom cap via createZIndexRules", () => {
+    const rules = createZIndexRules({ max: 100 });
+    expect(match("z-100", rules)).toEqual({ "z-index": "100" });
+    expect(match("z-101", rules)).toBeUndefined();
   });
 
   it("handles negatives via the leading-dash form", () => {

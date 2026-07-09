@@ -1,6 +1,6 @@
 {
   "name": "regexcss",
-  "version": "0.3.3",
+  "version": "0.3.5",
   "description": "Zero-preset CSS utility engine powered by user-defined regex rules",
   "keywords": [
     "atomic-css",
@@ -21,6 +21,9 @@
     "type": "git",
     "url": "git+https://github.com/maekoya/regexcss.git"
   },
+  "bin": {
+    "regexcss": "./dist/cli.mjs"
+  },
   "files": [
     "dist",
     "README.md",
@@ -31,6 +34,7 @@
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
+    "./cli": "./dist/cli.mjs",
     "./helpers": "./dist/helpers.mjs",
     "./preset": "./dist/preset.mjs",
     "./vite": "./dist/vite.mjs",

@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // text-transform — https://tailwindcss.com/docs/text-transform
 const VALUES: Record<string, string> = {
@@ -8,6 +9,7 @@ const VALUES: Record<string, string> = {
   "normal-case": "none",
 };
 
-export const textTransformRules: Rule[] = [
-  [/^(uppercase|lowercase|capitalize|normal-case)$/, ([, k]) => ({ "text-transform": VALUES[k ?? ""] ?? "" })],
-];
+export const textTransformRules: Rule[] = withMeta(
+  [[/^(uppercase|lowercase|capitalize|normal-case)$/, ([, k]) => ({ "text-transform": VALUES[k ?? ""] ?? "" })]],
+  { label: "text-transform", category: "typography", tags: ["preset"] },
+);

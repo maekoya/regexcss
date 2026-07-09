@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // overscroll-behavior — https://tailwindcss.com/docs/overscroll-behavior
 const props: Record<string, string> = {
@@ -7,12 +8,15 @@ const props: Record<string, string> = {
   y: "overscroll-behavior-y",
 };
 
-export const overscrollRules: Rule[] = [
+export const overscrollRules: Rule[] = withMeta(
   [
-    /^overscroll(?:-([xy]))?-(auto|contain|none)$/,
-    ([, dir, v]) => {
-      const prop = props[dir ?? ""];
-      return prop && v ? { [prop]: v } : undefined;
-    },
+    [
+      /^overscroll(?:-([xy]))?-(auto|contain|none)$/,
+      ([, dir, v]) => {
+        const prop = props[dir ?? ""];
+        return prop && v ? { [prop]: v } : undefined;
+      },
+    ],
   ],
-];
+  { label: "overscroll-behavior", category: "layout", tags: ["preset"] },
+);

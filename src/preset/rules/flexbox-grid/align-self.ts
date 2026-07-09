@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // align-self — https://tailwindcss.com/docs/align-self
 const ALIGN_SELF: Record<string, string> = {
@@ -10,6 +11,7 @@ const ALIGN_SELF: Record<string, string> = {
   baseline: "baseline",
 };
 
-export const alignSelfRules: Rule[] = [
-  [/^self-(auto|start|end|center|stretch|baseline)$/, ([, k]) => ({ "align-self": ALIGN_SELF[k ?? ""] ?? "" })],
-];
+export const alignSelfRules: Rule[] = withMeta(
+  [[/^self-(auto|start|end|center|stretch|baseline)$/, ([, k]) => ({ "align-self": ALIGN_SELF[k ?? ""] ?? "" })]],
+  { label: "align-self", category: "flexbox-grid", tags: ["preset"] },
+);

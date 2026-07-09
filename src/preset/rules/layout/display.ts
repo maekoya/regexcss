@@ -1,4 +1,5 @@
 import type { CSSObject, Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // Display utilities — https://tailwindcss.com/docs/display
 // class name -> CSS `display` value (most are identical; `hidden` maps to `none`).
@@ -50,8 +51,11 @@ const notSrOnly: CSSObject = {
   "white-space": "normal",
 };
 
-export const displayRules: Rule[] = [
-  ...Object.entries(DISPLAY).map(([name, value]): Rule => [new RegExp(`^${name}$`), () => ({ display: value })]),
-  [/^sr-only$/, () => srOnly],
-  [/^not-sr-only$/, () => notSrOnly],
-];
+export const displayRules: Rule[] = withMeta(
+  [
+    ...Object.entries(DISPLAY).map(([name, value]): Rule => [new RegExp(`^${name}$`), () => ({ display: value })]),
+    [/^sr-only$/, () => srOnly],
+    [/^not-sr-only$/, () => notSrOnly],
+  ],
+  { label: "display", category: "layout", tags: ["preset"] },
+);

@@ -1,5 +1,7 @@
 import { rem } from "../../../helpers.ts";
 import type { Rule } from "../../../types.ts";
+import { scaleSamples } from "../scale-samples.ts";
+import { withMeta } from "../with-meta.ts";
 
 // padding — https://tailwindcss.com/docs/padding
 const props: Record<string, string> = {
@@ -12,13 +14,28 @@ const props: Record<string, string> = {
   pb: "padding-bottom",
 };
 
+// one docs sample per key, e.g. { class: "pt-<num>", style: "padding-top: <num/4>rem;" }
+const numericSamples = scaleSamples(props, (key) => `${key}-<num>`);
+
+export interface PaddingOptions {
+  /** Largest value the numeric scale accepts, inclusive (default 96). Out-of-range values match no rule. */
+  max?: number;
+}
+
 // padding utilities. positive values only (no auto, no negative — CSS spec).
-export const paddingRules: Rule[] = [
-  [
-    /^(p[xylrtb]?)-(\d+(?:\.\d+)?|\.\d+)$/,
-    ([, key, num]) => {
-      const prop = props[key ?? ""];
-      return prop && num ? { [prop]: rem(num) } : undefined;
-    },
-  ],
-];
+export const createPaddingRules = ({ max = 96 }: PaddingOptions = {}): Rule[] =>
+  withMeta(
+    [
+      [
+        /^(p[xylrtb]?)-(\d+(?:\.\d+)?|\.\d+)$/,
+        ([, key, num]) => {
+          const prop = props[key ?? ""];
+          return prop && num && Number(num) <= max ? { [prop]: rem(num) } : undefined;
+        },
+        { samples: numericSamples },
+      ],
+    ],
+    { label: "padding", category: "spacing", tags: ["preset"] },
+  );
+
+export const paddingRules: Rule[] = createPaddingRules();

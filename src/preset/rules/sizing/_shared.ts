@@ -1,3 +1,4 @@
+import { stringifyDeclarations } from "../../../core/stringify.ts";
 import { rem } from "../../../helpers.ts";
 import type { CSSObject, Rule } from "../../../types.ts";
 
@@ -16,6 +17,9 @@ const VIEWPORT = ["dvw", "dvh", "lvw", "lvh", "svw", "svh"];
 // mirror Tailwind's theme tokens; the consumer defines the actual values.
 const CONTAINER = ["3xs", "2xs", "xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl"];
 
+// fractions accept numerator < denominator with denominators up to this bound
+const FRACTION_MAX_DENOMINATOR = 12;
+
 // "base" → width/height (auto), "min" → min-* (auto), "max" → max-* (none).
 type Kind = "base" | "min" | "max";
 
@@ -26,6 +30,8 @@ interface Options {
   axis: "w" | "h";
   /** add the container scale (w-3xs ... w-7xl → var(--container-*)). */
   container?: boolean;
+  /** largest value the numeric scale accepts, inclusive (default 96). Out-of-range values match no rule. */
+  max?: number;
 }
 
 // Keyword → CSS value map for the given kind/axis.
@@ -52,7 +58,7 @@ const keywords = (kind: Kind, { screen, axis, container }: Options): Record<stri
  *
  * @param prefix class-name prefix (`w`, `min-w`, `size`, ...)
  * @param kind   keyword flavour (controls auto vs none)
- * @param opts   per-axis `screen` value + axis marker
+ * @param opts   per-axis `screen` value + axis marker + numeric cap
  * @param emit   maps a resolved CSS value to the emitted declaration(s)
  */
 export const makeSizingRules = (
@@ -61,6 +67,7 @@ export const makeSizingRules = (
   opts: Options,
   emit: (value: string) => CSSObject,
 ): Rule[] => {
+  const max = opts.max ?? 96;
   const kw = keywords(kind, opts);
   // longest alternative first so multi-char keywords aren't shadowed
   const alt = Object.keys(kw)
@@ -68,13 +75,21 @@ export const makeSizingRules = (
     .join("|");
   return [
     // numeric scale: w-4 → width: 1rem (1 unit = 0.25rem)
-    [new RegExp(`^${prefix}-${NUM}$`), ([, num]) => (num ? emit(rem(num)) : undefined)],
+    [
+      new RegExp(`^${prefix}-${NUM}$`),
+      ([, num]) => (num && Number(num) <= max ? emit(rem(num)) : undefined),
+      { samples: [{ class: `${prefix}-<num>`, style: stringifyDeclarations(emit("<num/4>rem")) }] },
+    ],
     // fractions: w-1/2 → width: calc(1/2 * 100%)
     [
       new RegExp(`^${prefix}-(\\d+)\\/(\\d+)$`),
-      ([, n, d]) => (n && d && d !== "0" ? emit(`calc(${n}/${d} * 100%)`) : undefined),
+      ([, n, d]) =>
+        n && d && Number(n) >= 1 && Number(n) < Number(d) && Number(d) <= FRACTION_MAX_DENOMINATOR
+          ? emit(`calc(${n}/${d} * 100%)`)
+          : undefined,
+      { samples: [{ class: `${prefix}-<n>/<d>`, style: stringifyDeclarations(emit("calc(<n>/<d> * 100%)")) }] },
     ],
-    // keywords: w-full, w-screen, w-min, w-dvh, ...
+    // keywords: w-full, w-screen, w-min, w-dvh, ... enumerated straight from the regex.
     [new RegExp(`^${prefix}-(${alt})$`), ([, k]) => (k && kw[k] ? emit(kw[k]) : undefined)],
   ];
 };

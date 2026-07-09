@@ -4,6 +4,7 @@ import {
   alignContentRules,
   alignItemsRules,
   alignSelfRules,
+  createOrderRules,
   flexDirectionRules,
   flexWrapRules,
   gapRules,
@@ -297,5 +298,22 @@ describe("order", () => {
 
   it.each(["-order-first", "-order-none", "order--1", "order-1.5", "order-"])("rejects %j", (token) => {
     expect(match(token, orderRules)).toBeUndefined();
+  });
+});
+
+describe("numeric caps (default 12)", () => {
+  it("rejects values above the default cap", () => {
+    expect(match("grid-cols-13", gridTemplateColumnsRules)).toBeUndefined();
+    expect(match("grid-rows-13", gridTemplateRowsRules)).toBeUndefined();
+    expect(match("row-span-13", gridRowRules)).toBeUndefined();
+    expect(match("row-start-13", gridRowRules)).toBeUndefined();
+    expect(match("-row-end-13", gridRowRules)).toBeUndefined();
+    expect(match("order-13", orderRules)).toBeUndefined();
+  });
+
+  it("supports a custom cap via the factories", () => {
+    const order = createOrderRules({ max: 20 });
+    expect(match("order-20", order)).toEqual({ order: "20" });
+    expect(match("order-21", order)).toBeUndefined();
   });
 });

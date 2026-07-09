@@ -1,4 +1,5 @@
 import type { Rule } from "../../../types.ts";
+import { withMeta } from "../with-meta.ts";
 
 // grid-auto-columns — https://tailwindcss.com/docs/grid-auto-columns
 const GRID_AUTO_COLUMNS: Record<string, string> = {
@@ -8,6 +9,7 @@ const GRID_AUTO_COLUMNS: Record<string, string> = {
   fr: "minmax(0, 1fr)",
 };
 
-export const gridAutoColumnsRules: Rule[] = [
-  [/^auto-cols-(auto|min|max|fr)$/, ([, k]) => ({ "grid-auto-columns": GRID_AUTO_COLUMNS[k ?? ""] ?? "" })],
-];
+export const gridAutoColumnsRules: Rule[] = withMeta(
+  [[/^auto-cols-(auto|min|max|fr)$/, ([, k]) => ({ "grid-auto-columns": GRID_AUTO_COLUMNS[k ?? ""] ?? "" })]],
+  { label: "grid-auto-columns", category: "flexbox-grid", tags: ["preset"] },
+);

@@ -3,7 +3,7 @@ import { fontFamilyRules } from "./font-family.ts";
 import { fontStyleRules } from "./font-style.ts";
 import { fontVariantNumericRules } from "./font-variant-numeric.ts";
 import { fontWeightRules } from "./font-weight.ts";
-import { lineClampRules } from "./line-clamp.ts";
+import { createLineClampRules, type LineClampOptions, lineClampRules } from "./line-clamp.ts";
 import { textAlignRules } from "./text-align.ts";
 import { textDecorationLineRules } from "./text-decoration-line.ts";
 import { textOverflowRules } from "./text-overflow.ts";
@@ -13,8 +13,11 @@ import { verticalAlignRules } from "./vertical-align.ts";
 import { whiteSpaceRules } from "./white-space.ts";
 import { wordBreakRules } from "./word-break.ts";
 
-// re-export individual presets for granular use
+// re-export individual presets for granular use. Each already carries its docs
+// metadata (label / category / `preset` tag), so it stays fully described when
+// imported and used on its own.
 export {
+  createLineClampRules,
   fontFamilyRules,
   fontStyleRules,
   fontVariantNumericRules,
@@ -29,14 +32,19 @@ export {
   whiteSpaceRules,
   wordBreakRules,
 };
+export type { LineClampOptions };
 
-// aggregate — every preset in this category combined.
-export const typographyRules: Rule[] = [
+export interface TypographyOptions {
+  lineClamp?: LineClampOptions;
+}
+
+// aggregate factory — every preset in this category with per-page numeric caps.
+export const createTypographyRules = (options: TypographyOptions = {}): Rule[] => [
   ...fontFamilyRules,
   ...fontStyleRules,
   ...fontVariantNumericRules,
   ...fontWeightRules,
-  ...lineClampRules,
+  ...createLineClampRules(options.lineClamp),
   ...textAlignRules,
   ...textDecorationLineRules,
   ...textOverflowRules,
@@ -46,3 +54,6 @@ export const typographyRules: Rule[] = [
   ...whiteSpaceRules,
   ...wordBreakRules,
 ];
+
+// aggregate — every preset in this category combined, with default caps.
+export const typographyRules: Rule[] = createTypographyRules();

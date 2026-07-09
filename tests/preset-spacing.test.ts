@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
-import { gapRules, marginRules, paddingRules } from "../src/preset/index.ts";
+import { createMarginRules, createSpacingRules, gapRules, marginRules, paddingRules } from "../src/preset/index.ts";
 import type { RuleContext } from "../src/types.ts";
 
 const ctx = (token: string): RuleContext => ({
@@ -31,5 +31,33 @@ describe("preset spacing numeric guard", () => {
     expect(match("m-2", marginRules)).toEqual({ margin: "0.5rem" });
     expect(match("-m-2", marginRules)).toEqual({ margin: "-0.5rem" });
     expect(match("gap-2", gapRules)).toEqual({ gap: "0.5rem" });
+  });
+});
+
+describe("preset spacing numeric cap", () => {
+  it("accepts values up to the default cap of 96", () => {
+    expect(match("p-96")).toEqual({ padding: "24rem" });
+    expect(match("m-96", marginRules)).toEqual({ margin: "24rem" });
+    expect(match("-m-96", marginRules)).toEqual({ margin: "-24rem" });
+    expect(match("gap-96", gapRules)).toEqual({ gap: "24rem" });
+  });
+
+  it("rejects values above the default cap", () => {
+    expect(match("p-97")).toBeUndefined();
+    expect(match("m-97", marginRules)).toBeUndefined();
+    expect(match("-m-97", marginRules)).toBeUndefined();
+    expect(match("gap-97", gapRules)).toBeUndefined();
+    expect(match("m-96.5", marginRules)).toBeUndefined();
+  });
+
+  it("supports a custom cap via the factories", () => {
+    const margin = createMarginRules({ max: 4 });
+    expect(match("m-4", margin)).toEqual({ margin: "1rem" });
+    expect(match("m-5", margin)).toBeUndefined();
+
+    const spacing = createSpacingRules({ max: 8 });
+    expect(match("p-8", spacing)).toEqual({ padding: "2rem" });
+    expect(match("p-9", spacing)).toBeUndefined();
+    expect(match("m-9", spacing)).toBeUndefined();
   });
 });
