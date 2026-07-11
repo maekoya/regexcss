@@ -1,5 +1,6 @@
 import { defaultExtractor } from "../extractor/tokenize.ts";
 import type {
+  ExplainResult,
   GenerateOptions,
   GenerateResult,
   GenerateWarning,
@@ -216,5 +217,24 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
     return { css, matched, unmatched, warnings };
   };
 
-  return { generate, config };
+  // Single-token introspection for editor tooling: the same per-token pipeline as
+  // `generate`, but returns the unwrapped selector / declarations / parents (no
+  // `@layer` / `@custom-media`). Returns undefined when the token yields no CSS.
+  const explain = (token: string): ExplainResult | undefined => {
+    let matcherInput = token;
+    if (config.prefix !== "") {
+      if (!token.startsWith(config.prefix)) return undefined;
+      matcherInput = token.slice(config.prefix.length);
+    }
+    const { matcher, chain, collidedGroups } = applyVariantChain(matcherInput, config.variants);
+    if (collidedGroups.length > 0) return undefined; // e.g. md:sm: — suppressed like in generate
+    const ctx = { rawSelector: token, currentSelector: matcher, variants: chain };
+    const match = matchRule(matcher, config.rules, ctx);
+    if (!match) return undefined;
+    const declarations = stringifyDeclarations(match.css);
+    if (declarations.length === 0) return undefined;
+    return { selector: buildSelector(token, chain), declarations, parents: collectParents(chain) };
+  };
+
+  return { generate, explain, config };
 };

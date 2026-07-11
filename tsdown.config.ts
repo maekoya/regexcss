@@ -7,6 +7,7 @@ export default defineConfig({
     helpers: "src/helpers.ts",
     preset: "src/preset/index.ts",
     cli: "src/cli.ts",
+    config: "src/config/load.ts",
   },
   format: ["esm"],
   dts: true,

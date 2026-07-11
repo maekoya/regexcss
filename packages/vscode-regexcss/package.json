@@ -1,0 +1,86 @@
+{
+  "name": "vscode-regexcss",
+  "displayName": "regexcss IntelliSense",
+  "version": "0.0.1",
+  "description": "Hover previews and class-name autocomplete for regexcss, driven by your regexcss.config.",
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "homepage": "https://github.com/maekoya/regexcss/tree/main/packages/vscode-regexcss#readme",
+  "bugs": {
+    "url": "https://github.com/maekoya/regexcss/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maekoya/regexcss.git",
+    "directory": "packages/vscode-regexcss"
+  },
+  "type": "module",
+  "main": "./dist/extension.cjs",
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "regexcss": "workspace:*",
+    "typescript": "6.0.3"
+  },
+  "contributes": {
+    "configuration": {
+      "title": "regexcss IntelliSense",
+      "properties": {
+        "regexcss.configPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Path to the regexcss config, relative to the workspace folder. Empty = auto-discover the nearest regexcss.config.{ts,mts,js,mjs,cjs} by walking up from the edited file."
+        },
+        "regexcss.classAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "class",
+            "className",
+            "class:list",
+            "classList"
+          ],
+          "scope": "resource",
+          "description": "Attribute names whose string values are treated as class lists for completion."
+        },
+        "regexcss.languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "html",
+            "javascript",
+            "javascriptreact",
+            "typescript",
+            "typescriptreact",
+            "vue",
+            "svelte",
+            "astro"
+          ],
+          "scope": "window",
+          "description": "VSCode language identifiers to enable hover and completion for. This replaces the default list — copy the defaults and add or remove entries as needed."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  }
+}

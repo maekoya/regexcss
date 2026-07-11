@@ -1,6 +1,6 @@
 export default {
   test: {
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"],
     snapshotSerializers: ["./tests/serializers/css.ts"],
     coverage: {
       include: ["src/**/*.ts"],

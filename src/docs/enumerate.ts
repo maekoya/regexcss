@@ -60,6 +60,12 @@ export interface EnumerateOptions {
    * no cap. Rules with `samples` ignore it.
    */
   maxClassesPerRule?: number;
+  /**
+   * Ignore `samples` and always enumerate concrete class names from every rule's regex.
+   * Use it when you need real class names (e.g. editor autocomplete) rather than the
+   * compact sample patterns docs output prefers.
+   */
+  concrete?: boolean;
 }
 
 const DEFAULT_MAX_CLASSES_PER_RULE = 100;
@@ -106,9 +112,10 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
     const docRule = docRules[index];
     if (!docRule || perRule[index]?.hidden) return; // hidden rules collect no classes and are dropped below
 
-    // samples: shown verbatim, attributed to their own rule
+    // samples: shown verbatim, attributed to their own rule (skipped in concrete mode,
+    // which always enumerates real class names from the regex instead)
     const samples = meta?.samples;
-    if (samples && samples.length > 0) {
+    if (!options.concrete && samples && samples.length > 0) {
       for (const s of samples) docRule.classes.push({ className: prefix + s.class, css: s.style });
       return;
     }
@@ -128,8 +135,9 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
       const ctx: RuleContext = { rawSelector: candidate, currentSelector: candidate, variants: [] };
       const match = matchRule(candidate, rules, ctx);
       const winner = match && perRule[match.index];
-      // drop non-matches, and don't leak concrete classes into a sample-documented or hidden rule
-      if (!match || !winner || winner.hasSamples || winner.hidden) continue;
+      // drop non-matches and hidden rules; outside concrete mode, also don't leak concrete
+      // classes into a sample-documented rule (in concrete mode we want exactly those)
+      if (!match || !winner || winner.hidden || (!options.concrete && winner.hasSamples)) continue;
       seen.add(candidate);
       const shown = winner.matched;
       winner.matched = shown + 1;
