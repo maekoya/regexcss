@@ -1,7 +1,7 @@
 {
   "name": "vscode-regexcss",
   "displayName": "regexcss IntelliSense",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Hover previews and class-name autocomplete for regexcss, driven by your regexcss.config.",
   "categories": [
     "Programming Languages"
