@@ -2,9 +2,9 @@ packages:
   - examples/*
   - packages/*
 allowBuilds:
-  "@vscode/vsce-sign": set this to true or false
+  "@vscode/vsce-sign": false
   esbuild: true
-  keytar: set this to true or false
+  keytar: false
 minimumReleaseAgeExclude:
   - vite-plus
   - "@voidzero-dev/*"

@@ -22,12 +22,15 @@ const patchJiti = {
   setup(build) {
     build.onLoad({ filter: /jiti\/lib\/jiti\.mjs$/ }, async (args) => {
       const original = await readFile(args.path, "utf8");
-      return {
-        contents: original.replace(
-          'createRequire(import.meta.url)("../dist/babel.cjs")',
-          'require("../dist/babel.cjs")',
-        ),
-      };
+      const search = 'createRequire(import.meta.url)("../dist/babel.cjs")';
+      // Fail loudly if jiti's source changed and the patch no longer applies —
+      // otherwise the unpatched `import.meta.url` would silently break at runtime.
+      if (!original.includes(search)) {
+        throw new Error(
+          `patch-jiti: expected string not found in ${args.path}; jiti likely changed — update the patch in esbuild.mjs.`,
+        );
+      }
+      return { contents: original.replace(search, 'require("../dist/babel.cjs")') };
     });
   },
 };

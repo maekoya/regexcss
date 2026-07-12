@@ -27,10 +27,12 @@ including dynamic values that no finite class list could enumerate (`mt-73`, `w-
 
 ## Supported languages
 
-html / JavaScript / JavaScriptReact / TypeScript / TypeScriptReact / Vue / Svelte / Astro
+`html` / `javascript` / `javascriptreact` / `typescript` / `typescriptreact` / `vue` /
+`svelte` / `astro`
 
 Customize the target languages with `regexcss.languages` — this **replaces** the default
-list, so copy the defaults and add or remove entries as needed.
+list, so copy the defaults (the exact VS Code language identifiers above) and add or
+remove entries as needed.
 
 ## Settings
 

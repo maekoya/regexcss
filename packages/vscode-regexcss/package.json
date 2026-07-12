@@ -20,6 +20,7 @@
   "type": "module",
   "main": "./dist/extension.cjs",
   "scripts": {
+    "vscode:prepublish": "node esbuild.mjs",
     "build": "node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
     "package": "vsce package --no-dependencies"

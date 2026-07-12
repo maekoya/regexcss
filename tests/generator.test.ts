@@ -58,6 +58,22 @@ describe("createGenerator", () => {
       expect(gen.explain("nope")).toBeUndefined();
     });
 
+    it("returns undefined when the variant chain collides (same exclusivity group)", () => {
+      const grouped: Variant[] = [
+        [/^sm:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--sm)", group: "window-size" })],
+        [/^md:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--md)", group: "window-size" })],
+      ];
+      const gen = createGenerator({ rules, variants: grouped });
+      // md:sm: stacks two variants from the same group — suppressed, like in generate()
+      expect(gen.explain("md:sm:m-1")).toBeUndefined();
+      // a single variant from that group still resolves normally
+      expect(gen.explain("md:m-1")).toEqual({
+        selector: ".md\\:m-1",
+        declarations: "margin: 1px;",
+        parents: ["@media (--md)"],
+      });
+    });
+
     it("does not include @layer / @custom-media wrappers that generate would add", () => {
       const gen = createGenerator({ rules, layerName: "utilities", customMedia: { "--md": "(min-width: 768px)" } });
       const explained = gen.explain("m-1");
