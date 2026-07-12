@@ -4,7 +4,6 @@
   "version": "0.0.1",
   "description": "Hover previews and class-name autocomplete for regexcss, driven by your regexcss.config.",
   "categories": [
-    "Other",
     "Programming Languages"
   ],
   "homepage": "https://github.com/maekoya/regexcss/tree/main/packages/vscode-regexcss#readme",
@@ -17,19 +16,22 @@
     "url": "git+https://github.com/maekoya/regexcss.git",
     "directory": "packages/vscode-regexcss"
   },
+  "publisher": "stromatolite",
   "type": "module",
   "main": "./dist/extension.cjs",
   "scripts": {
     "vscode:prepublish": "node esbuild.mjs",
     "build": "node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "release": "bumpp --tag \"vscode-v%s\" --commit \"chore(vscode): release v%s\""
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.2.0",
     "esbuild": "^0.24.0",
+    "ovsx": "^1.0.0",
     "regexcss": "workspace:*",
     "typescript": "6.0.3"
   },
