@@ -6,5 +6,6 @@ coverage/
 .vite/
 .vp/
 .pnpm-store
+*.vsix
 
 regexcss-docs.html

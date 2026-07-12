@@ -53,6 +53,17 @@ describe("enumerateClasses — samples (verbatim)", () => {
     const result = enumerateClasses({ rules }, { maxNumber: 5 });
     expect(names(result)).toEqual(["m-{num}"]);
   });
+
+  it("concrete mode ignores samples and enumerates real class names", () => {
+    const rules: Rule[] = [
+      [/^m-(\d+)$/, ([, n]) => ({ margin: `${n}px` }), { samples: [{ class: "m-{num}", style: "margin: …;" }] }],
+    ];
+    const docs = enumerateClasses({ rules }, { maxNumber: 3 });
+    expect(names(docs)).toEqual(["m-{num}"]); // sample pattern
+    const concrete = enumerateClasses({ rules }, { maxNumber: 3, concrete: true });
+    expect(names(concrete)).toEqual(["m-0", "m-1", "m-2", "m-3"]); // real classes with CSS
+    expect(concrete.rules[0]?.classes[0]?.css).toBe("margin: 0px;");
+  });
 });
 
 describe("enumerateClasses — regex fallback (no samples)", () => {

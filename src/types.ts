@@ -246,12 +246,32 @@ export interface GenerateOptions {
 }
 
 /**
+ * What a single token produces, without the `@layer` / `@custom-media` wrappers that
+ * {@link Generator.generate} adds. Returned by {@link Generator.explain} — handy for
+ * editor tooling (hover previews) that wants just the rule for one class.
+ */
+export interface ExplainResult {
+  /** The generated selector, e.g. `".md\\:m-4"` (variant selector transforms applied). */
+  selector: string;
+  /** The declarations, e.g. `"margin: 1rem;"` — no selector or at-rule wrappers. */
+  declarations: string;
+  /** At-rule wrappers contributed by variants, outermost first (e.g. `["@media (--md)"]`). */
+  parents: string[];
+}
+
+/**
  * Stateful generator built from a {@link UserConfig}. Call `generate(tokens)` to produce
  * CSS; the same generator can be reused across many calls.
  */
 export interface Generator {
   /** Generate CSS for the given iterable of utility tokens. */
   generate(tokens: Iterable<string>, options?: GenerateOptions): Promise<GenerateResult>;
+  /**
+   * Explain a single token: the selector + declarations + at-rule parents it produces,
+   * unwrapped. Returns `undefined` when the token matches no rule (or its variant chain
+   * collides). Synchronous — no scanning or file IO.
+   */
+  explain(token: string): ExplainResult | undefined;
   /** Effective config with defaults applied. */
   readonly config: ResolvedConfig;
 }

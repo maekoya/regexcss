@@ -27,6 +27,61 @@ describe("createGenerator", () => {
     expect(css).toBe(".m-1 { margin: 1px; }");
   });
 
+  describe("explain", () => {
+    it("returns the unwrapped selector + declarations for a plain token", () => {
+      const gen = createGenerator({ rules });
+      expect(gen.explain("m-1")).toEqual({ selector: ".m-1", declarations: "margin: 1px;", parents: [] });
+    });
+
+    it("applies variant selector transforms and at-rule parents", () => {
+      const gen = createGenerator({ rules, variants });
+      expect(gen.explain("hover:p-2")).toEqual({
+        selector: ".hover\\:p-2:hover",
+        declarations: "padding: 2px;",
+        parents: [],
+      });
+      expect(gen.explain("md:m-4")).toEqual({
+        selector: ".md\\:m-4",
+        declarations: "margin: 4px;",
+        parents: ["@media (--md)"],
+      });
+    });
+
+    it("respects the prefix (miss → undefined, hit → stripped)", () => {
+      const gen = createGenerator({ rules, prefix: "tw-" });
+      expect(gen.explain("m-1")).toBeUndefined();
+      expect(gen.explain("tw-m-1")).toEqual({ selector: ".tw-m-1", declarations: "margin: 1px;", parents: [] });
+    });
+
+    it("returns undefined for tokens that match no rule", () => {
+      const gen = createGenerator({ rules });
+      expect(gen.explain("nope")).toBeUndefined();
+    });
+
+    it("returns undefined when the variant chain collides (same exclusivity group)", () => {
+      const grouped: Variant[] = [
+        [/^sm:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--sm)", group: "window-size" })],
+        [/^md:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--md)", group: "window-size" })],
+      ];
+      const gen = createGenerator({ rules, variants: grouped });
+      // md:sm: stacks two variants from the same group — suppressed, like in generate()
+      expect(gen.explain("md:sm:m-1")).toBeUndefined();
+      // a single variant from that group still resolves normally
+      expect(gen.explain("md:m-1")).toEqual({
+        selector: ".md\\:m-1",
+        declarations: "margin: 1px;",
+        parents: ["@media (--md)"],
+      });
+    });
+
+    it("does not include @layer / @custom-media wrappers that generate would add", () => {
+      const gen = createGenerator({ rules, layerName: "utilities", customMedia: { "--md": "(min-width: 768px)" } });
+      const explained = gen.explain("m-1");
+      expect(explained?.declarations).toBe("margin: 1px;");
+      expect(explained?.selector).toBe(".m-1");
+    });
+  });
+
   it("skips unmatched tokens and reports them", async () => {
     const gen = createGenerator({ rules });
     const { matched, unmatched } = await gen.generate(["unknown-token"]);

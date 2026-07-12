@@ -9,6 +9,7 @@ export type {
   ContentConfig,
   CSSEntries,
   CSSObject,
+  ExplainResult,
   GenerateOptions,
   GenerateResult,
   GenerateWarning,

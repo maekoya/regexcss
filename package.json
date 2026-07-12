@@ -35,6 +35,7 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./cli": "./dist/cli.mjs",
+    "./config": "./dist/config.mjs",
     "./helpers": "./dist/helpers.mjs",
     "./preset": "./dist/preset.mjs",
     "./vite": "./dist/vite.mjs",
