@@ -28,11 +28,21 @@ Host. Open a project that has a `regexcss.config.ts` and try hover and completio
 ## Test
 
 ```sh
-vp run --filter vscode-regexcss test    # unit tests for format / tokens / resolve
+vp test    # from the monorepo root — its vitest include covers packages/*/tests/**
 ```
 
 The pure logic ([format.ts](./src/format.ts) / [tokens.ts](./src/tokens.ts) /
-[resolve.ts](./src/resolve.ts)) has no vscode dependency and can be unit-tested directly.
+[content.ts](./src/content.ts)) has no vscode dependency and can be unit-tested directly.
+
+### Manual check of content.include targeting
+
+In the Extension Development Host, open `examples/basic-vite` (its config has
+`content: { include: ["./index.html"] }`): hover/completion should work in
+`index.html` but stay silent in `src/main.ts`. Comment out `content` in the config
+and save — `index.html` goes dormant too, and the output channel logs
+"content.include is empty — dormant". To exercise `../` includes, add e.g.
+`"../shared/**/*.html"` to the include and create a matching file above the
+config's directory.
 
 ## How the bundle works (jiti / import.meta.url)
 

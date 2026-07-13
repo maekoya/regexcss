@@ -49,6 +49,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.19.41
+      '@types/picomatch':
+        specifier: ^4.0.3
+        version: 4.0.3
       '@types/vscode':
         specifier: ^1.90.0
         version: 1.125.0
@@ -61,6 +64,9 @@ importers:
       ovsx:
         specifier: ^1.0.0
         version: 1.0.2
+      picomatch:
+        specifier: ^4.0.4
+        version: 4.0.4
       regexcss:
         specifier: workspace:*
         version: link:../..
@@ -765,6 +771,9 @@ packages:
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
+
+  '@types/picomatch@4.0.3':
+    resolution: {integrity: sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==}
 
   '@types/sarif@2.1.7':
     resolution: {integrity: sha512-kRz0VEkJqWLf1LLVN4pT1cg1Z9wAuvI6L97V3m2f5B76Tg8d413ddvLBPTEHAZJlnn4XSvu0FkZtViCQGVyrXQ==}
@@ -2681,6 +2690,8 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/normalize-package-data@2.4.4': {}
+
+  '@types/picomatch@4.0.3': {}
 
   '@types/sarif@2.1.7': {}
 

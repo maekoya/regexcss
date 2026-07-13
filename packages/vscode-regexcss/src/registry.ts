@@ -1,6 +1,6 @@
 import { dirname, resolve as resolvePath } from "node:path";
 import * as vscode from "vscode";
-import { findConfigFile } from "./resolve.ts";
+import { orderConfigCandidates } from "./content.ts";
 import { loadState, type RegexcssState } from "./state.ts";
 
 /**
@@ -16,39 +16,68 @@ export interface Registry {
   invalidate(): void;
 }
 
+const CONFIG_GLOB = "**/regexcss.config.{ts,mts,js,mjs,cjs}";
+
 export const createRegistry = (log: (message: string) => void): Registry => {
   // keyed by absolute config file path; a config shared by sibling folders loads once
-  const cache = new Map<string, Promise<RegexcssState | null>>();
+  const stateCache = new Map<string, Promise<RegexcssState | null>>();
+  // every regexcss.config.* in the workspace, found once and reused
+  let configListPromise: Promise<string[]> | undefined;
 
-  // Which config file governs this document: an explicit `configPath` setting (read
-  // per-resource, so a folder's .vscode/settings.json wins), else the nearest
-  // regexcss.config.* walking up to the workspace folder root.
-  const configFileFor = (uri: vscode.Uri): string | undefined => {
-    const folder = vscode.workspace.getWorkspaceFolder(uri);
-    if (!folder) return undefined;
-    const setting = vscode.workspace.getConfiguration("regexcss", uri).get<string>("configPath");
-    if (setting) return resolvePath(folder.uri.fsPath, setting);
-    return findConfigFile(dirname(uri.fsPath), folder.uri.fsPath);
+  const workspaceConfigFiles = (): Promise<string[]> => {
+    // the explicit exclude replaces VSCode's default excludes, so a config hidden by a
+    // user's files.exclude is still found
+    configListPromise ??= Promise.resolve(vscode.workspace.findFiles(CONFIG_GLOB, "**/node_modules/**")).then((uris) =>
+      uris.map((u) => u.fsPath).sort(),
+    );
+    return configListPromise;
   };
 
-  const stateFor = (uri: vscode.Uri): Promise<RegexcssState | null> => {
-    const configFile = configFileFor(uri);
-    if (!configFile) return Promise.resolve(null);
-    let entry = cache.get(configFile);
+  const loadCached = (configFile: string): Promise<RegexcssState | null> => {
+    let entry = stateCache.get(configFile);
     if (!entry) {
       entry = loadState(dirname(configFile), configFile)
         .then((state) => {
-          log(state ? `loaded ${configFile} — ${state.completions.length} classes` : `no config at ${configFile}`);
+          if (state?.matches === null) {
+            log(`${configFile}: content.include is empty — dormant (add include globs to enable IntelliSense)`);
+          } else {
+            log(state ? `loaded ${configFile} — ${state.completions.length} classes` : `no config at ${configFile}`);
+          }
           return state;
         })
         .catch((e) => {
           log(`failed to load ${configFile}: ${e instanceof Error ? e.message : String(e)}`);
           return null;
         });
-      cache.set(configFile, entry);
+      stateCache.set(configFile, entry);
     }
     return entry;
   };
 
-  return { stateFor, invalidate: () => cache.clear() };
+  // Which config governs this document: the one whose content.include globs match it.
+  // Candidates are an explicit `configPath` setting (read per-resource, so a folder's
+  // .vscode/settings.json wins), else every config in the workspace ordered by
+  // proximity — include patterns may reach above their config dir (`../shared/**`),
+  // so a plain walk-up from the document would miss such configs.
+  const stateFor = async (uri: vscode.Uri): Promise<RegexcssState | null> => {
+    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    if (!folder) return null; // outside any workspace folder → dormant
+    const setting = vscode.workspace.getConfiguration("regexcss", uri).get<string>("configPath");
+    const candidates = setting
+      ? [resolvePath(folder.uri.fsPath, setting)]
+      : orderConfigCandidates(await workspaceConfigFiles(), uri.fsPath);
+    for (const configFile of candidates) {
+      const state = await loadCached(configFile);
+      if (state?.matches?.(uri.fsPath)) return state;
+    }
+    return null;
+  };
+
+  return {
+    stateFor,
+    invalidate: () => {
+      stateCache.clear();
+      configListPromise = undefined; // re-find configs next use (picks up created/deleted files)
+    },
+  };
 };
