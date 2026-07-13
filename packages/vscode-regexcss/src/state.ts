@@ -1,6 +1,7 @@
 import { createGenerator, enumerateClasses } from "regexcss";
 import type { DocClass, Generator } from "regexcss";
 import { loadUserConfig } from "regexcss/config";
+import { createContentMatcher, type ContentMatcher } from "./content.ts";
 
 /** Everything the providers need, derived from one config load. */
 export interface RegexcssState {
@@ -10,6 +11,8 @@ export interface RegexcssState {
   completions: DocClass[];
   /** The config source that was loaded (for status / logging). */
   source: string | undefined;
+  /** Which files this config governs (its content.include/exclude); null = empty include = dormant. */
+  matches: ContentMatcher | null;
 }
 
 /**
@@ -25,7 +28,8 @@ export const loadState = async (root: string, configPath?: string): Promise<Rege
   const { rules } = enumerateClasses(config, { concrete: true, maxNumber: 12 });
   const classes = rules.flatMap((r) => r.classes).filter((c) => !isNoisyDecimal(c.className));
   const completions = dedupeByClassName(classes);
-  return { generator, completions, source: sources[0] };
+  const matches = createContentMatcher(config.content, root);
+  return { generator, completions, source: sources[0], matches };
 };
 
 // Concrete regex enumeration produces every decimal (m-0.0, m-0.1, …); keep only
