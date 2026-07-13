@@ -1,5 +1,6 @@
 import { matchRule } from "../core/rules.ts";
 import { stringifyDeclarations } from "../core/stringify.ts";
+import { normalizeVariants } from "../core/variants.ts";
 import type { RuleContext, UserConfig } from "../types.ts";
 import { expandRegexSource } from "./regex-expand.ts";
 
@@ -160,7 +161,8 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
   }
 
   // variants are documented by an overview only — no class combinations
-  const variants: DocVariant[] = (config.variants ?? []).map(([re, , meta]) => ({
+  // (normalized first: object-form variants carry their meta in the built tuple)
+  const variants: DocVariant[] = normalizeVariants(config.variants ?? []).map(([re, , meta]) => ({
     label: meta?.label ?? re.source,
     source: re.source,
     group: meta?.group,

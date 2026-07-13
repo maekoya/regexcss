@@ -1,7 +1,8 @@
 // Optional helpers. Import from 'regexcss/helpers'.
 
 import { readFileSync } from "node:fs";
-import type { Variant } from "./types.ts";
+import { buildVariant } from "./core/variants.ts";
+import type { Variant, VariantObject } from "./types.ts";
 
 // --- unit helpers ---
 
@@ -19,21 +20,12 @@ export const vh = (n: string | number): string => `${Number(n)}vh`;
 
 // --- variant helper ---
 
-// Escape regex meta characters so a user-supplied prefix is treated literally.
-const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 /**
  * Build a {@link Variant} from a prefix plus optional selector / parent transforms.
  *
- * - `selector`: string suffix (e.g. `":hover"`) — appended to the generated class selector.
- *   Or a function `(s) => string` for complex shapes (e.g. `(s) => `.group:hover ${s}``).
- * - `parent`: at-rule that wraps the rule (e.g. `"@media (min-width: 768px)"`,
- *   `"@media (any-hover: hover)"`, `"@container (width > 30em)"`).
- * - `group`: exclusivity group — at most one variant per group applies to a token, so
- *   contradictory stacks like `md:sm:` are dropped (with a warning) instead of emitting
- *   nested media queries.
- *
- * The prefix is treated literally — regex meta characters in it are escaped.
+ * Kept for programmatic use — in a config's `variants`, the plain object form
+ * (`{ prefix: "md", parent: "@media (--md)" }`, see `VariantObject`) does the same
+ * thing with no import.
  *
  * @example
  * createVariant("md", { parent: "@media (min-width: 768px)", group: "window-size" })
@@ -41,43 +33,8 @@ const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\
  * createVariant("hover", { selector: ":hover", parent: "@media (any-hover: hover)" })
  * createVariant("group-hover", { selector: (s) => `.group:hover ${s}` })
  */
-export const createVariant = (
-  prefix: string,
-  options: {
-    selector?: string | ((s: string) => string);
-    parent?: string;
-    group?: string;
-    /** Docs summary override. Defaults to a description built from selector / parent / group. */
-    note?: string;
-    /** Docs output-sample override. Defaults to a representative wrapped selector. */
-    sample?: string;
-  },
-): Variant => {
-  const { selector, parent, group, note, sample } = options;
-  const selectorFn = typeof selector === "string" ? (s: string) => `${s}${selector}` : selector;
-  // human-readable overview for docs output (`regexcss docs`); the group is carried
-  // separately (shown as a chip), so it is not folded into this summary.
-  const summary =
-    [typeof selector === "string" ? `&${selector}` : selector ? "custom selector" : "", parent ?? ""]
-      .filter(Boolean)
-      .join(" · ") || undefined;
-  // representative output for docs: the prefixed, `\:`-escaped selector (with any
-  // selector transform applied) wrapped in the parent at-rule — `<utility>` stands
-  // in for whatever class the variant is used on.
-  const base = `.${prefix}\\:<utility>`;
-  const declBlock = `${selectorFn ? selectorFn(base) : base} { … }`;
-  const outputSample = parent ? `${parent} {\n  ${declBlock}\n}` : declBlock;
-  return [
-    new RegExp(`^${escapeRegExp(prefix)}:`),
-    (_, raw) => ({
-      matcher: raw.slice(prefix.length + 1),
-      ...(selectorFn ? { selector: selectorFn } : {}),
-      ...(parent ? { parent } : {}),
-      ...(group !== undefined ? { group } : {}),
-    }),
-    { label: prefix, ...(group !== undefined ? { group } : {}), note: note ?? summary, sample: sample ?? outputSample },
-  ];
-};
+export const createVariant = (prefix: string, options: Omit<VariantObject, "prefix">): Variant =>
+  buildVariant({ prefix, ...options });
 
 // --- @custom-media parsers ---
 

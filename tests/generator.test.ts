@@ -119,6 +119,21 @@ describe("createGenerator", () => {
     `);
   });
 
+  it("accepts object-form variants (no createVariant import needed)", async () => {
+    const gen = createGenerator({
+      rules,
+      variants: [
+        { prefix: "md", parent: "@media (--md)" },
+        { prefix: "hover", selector: ":hover" },
+      ],
+    });
+    const md = await gen.generate(["md:m-1"]);
+    expect(md.css).toContain("@media (--md)");
+    expect(md.css).toContain(".md\\:m-1 { margin: 1px; }");
+    const hover = await gen.generate(["hover:m-1"]);
+    expect(hover.css).toBe(".hover\\:m-1:hover { margin: 1px; }");
+  });
+
   it("composes md + hover variants", async () => {
     const gen = createGenerator({ rules, variants });
     const { css } = await gen.generate(["md:hover:m-1"]);

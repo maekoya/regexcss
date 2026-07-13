@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { applyVariantChain } from "../src/core/variants.ts";
-import type { Variant } from "../src/types.ts";
+import { applyVariantChain, normalizeVariants } from "../src/core/variants.ts";
+import { createVariant } from "../src/helpers.ts";
+import type { Variant, VariantInput } from "../src/types.ts";
 
 const variants: Variant[] = [
   [/^md:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--md)" })],
@@ -100,5 +101,43 @@ describe("applyVariantChain — exclusivity groups", () => {
     const r = applyVariantChain("md:m-1", grouped);
     expect(r.chain).toHaveLength(1);
     expect(r.collidedGroups).toEqual([]);
+  });
+});
+
+describe("normalizeVariants", () => {
+  it("passes tuples through untouched and builds tuples from objects", () => {
+    const tuple: Variant = [/^dark:/, (_, raw) => ({ matcher: raw.slice(5) })];
+    const input: VariantInput[] = [tuple, { prefix: "md", parent: "@media (--md)" }];
+    const [first, second] = normalizeVariants(input);
+    expect(first).toBe(tuple);
+    expect(Array.isArray(second)).toBe(true);
+  });
+
+  it("object form is equivalent to createVariant", () => {
+    const [fromObject] = normalizeVariants([
+      { prefix: "hover", selector: ":hover", parent: "@media (any-hover: hover)", group: "g" },
+    ]);
+    const fromHelper = createVariant("hover", {
+      selector: ":hover",
+      parent: "@media (any-hover: hover)",
+      group: "g",
+    });
+    // same matching / stripping / wrapping behavior
+    const rObject = applyVariantChain("hover:m-1", [fromObject as Variant]);
+    const rHelper = applyVariantChain("hover:m-1", [fromHelper]);
+    expect(rObject.matcher).toBe("m-1");
+    expect(rObject.chain[0]?.selector?.(".x")).toBe(".x:hover");
+    expect(rObject.chain[0]?.parent).toBe("@media (any-hover: hover)");
+    expect(rHelper.chain[0]?.selector?.(".x")).toBe(".x:hover");
+    // same docs meta (label / group / derived note / sample)
+    expect(fromObject?.[2]).toEqual(fromHelper[2]);
+  });
+
+  it("escapes regex meta characters in an object-form prefix", () => {
+    const [v] = normalizeVariants([{ prefix: "w+1.5", parent: "@media (--x)" }]);
+    const r = applyVariantChain("w+1.5:m-1", [v as Variant]);
+    expect(r.matcher).toBe("m-1");
+    // the `+` and `.` are literals — a lookalike prefix must not match
+    expect(applyVariantChain("wa105:m-1", [v as Variant]).chain).toHaveLength(0);
   });
 });

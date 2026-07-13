@@ -134,6 +134,37 @@ export interface VariantMeta {
  */
 export type Variant = [RegExp, VariantHandler] | [RegExp, VariantHandler, VariantMeta];
 
+/**
+ * Declarative variant definition — the common case, no helper import needed. Normalized
+ * internally to a {@link Variant} tuple with the same semantics as
+ * `createVariant(prefix, options)`. Use a raw tuple when a literal prefix can't express
+ * the match (regex prefixes, non-`:` separators, …).
+ */
+export interface VariantObject {
+  /** Variant prefix before the `:`, e.g. `"md"`. Treated literally — regex meta characters are escaped. */
+  prefix: string;
+  /**
+   * Selector suffix (e.g. `":hover"`) appended to the generated class selector, or a
+   * transform function for complex shapes (e.g. `(s) => `.group:hover ${s}``).
+   */
+  selector?: string | ((s: string) => string);
+  /** At-rule that wraps the rule, e.g. `"@media (--md)"`, `"@container (width > 30em)"`. */
+  parent?: string;
+  /**
+   * Exclusivity group — at most one variant per group applies to a token, so
+   * contradictory stacks like `md:sm:` are dropped (with a warning) instead of emitting
+   * nested media queries.
+   */
+  group?: string;
+  /** Docs summary override. Defaults to a description built from selector / parent / group. */
+  note?: string;
+  /** Docs output-sample override. Defaults to a representative wrapped selector. */
+  sample?: string;
+}
+
+/** Either form accepted by {@link UserConfig.variants}. */
+export type VariantInput = Variant | VariantObject;
+
 /** Glob patterns describing which source files to scan for utility class tokens. */
 export interface ContentConfig {
   /** Files / directories to scan. Relative paths and root-external paths are both supported. */
@@ -162,11 +193,15 @@ export interface UserConfig {
    * applied head-to-tail until none match; each variant strips its own prefix and may wrap
    * the resulting selector and/or at-rule.
    *
+   * Each entry is either a declarative {@link VariantObject}
+   * (`{ prefix: "md", parent: "@media (--md)" }`) or a raw {@link Variant} tuple for
+   * matches a literal prefix can't express.
+   *
    * Definition order doubles as cascade order: variant-wrapped output is emitted after the
    * base utilities, grouped by variant in definition order. Define responsive breakpoints
    * smallest-first (`sm`, `md`, `lg`) for mobile-first overrides.
    */
-  variants?: Variant[];
+  variants?: VariantInput[];
   /**
    * Wraps the generated declarations in `@layer <layerName> { ... }`. Use this to control
    * cascade order against other CSS in the project. Omit to skip the layer wrap.

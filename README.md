@@ -45,7 +45,6 @@ export default defineConfig({
 ```ts
 // regexcss.config.ts
 import { defineConfig } from "regexcss";
-import { createVariant } from "regexcss/helpers";
 
 export default defineConfig({
   content: {
@@ -56,11 +55,14 @@ export default defineConfig({
     [/^text-(left|center|right)$/, ([, align]) => ({ "text-align": align })],
   ],
   variants: [
-    createVariant("hover", { selector: ":hover" }),
-    createVariant("md", { parent: "@media (min-width: 768px)" }),
+    { prefix: "hover", selector: ":hover" },
+    { prefix: "md", parent: "@media (min-width: 768px)" },
   ],
 });
 ```
+
+Variants are plain objects (`prefix` + optional `selector` / `parent` / `group`).
+For matches a literal prefix can't express, pass a raw `[RegExp, handler]` tuple instead.
 
 **3. Import the generated CSS**
 
@@ -127,7 +129,7 @@ Defaults: `spacing` / `gap` / `sizing` → 96, `grid-cols` / `grid-rows` / `row-
 | ------------------ | ------------------------------------------------------------------------- |
 | `regexcss`         | `defineConfig`, `createGenerator`, types                                  |
 | `regexcss/vite`    | The Vite plugin                                                           |
-| `regexcss/helpers` | `createVariant`, unit helpers (`rem`, `px`, ...), `@custom-media` parsers |
+| `regexcss/helpers` | Unit helpers (`rem`, `px`, ...), `@custom-media` parsers, `createVariant` |
 | `regexcss/preset`  | Optional Tailwind-flavored rule sets (`spacingRules`, `layoutRules`, ...) |
 
 ## Example

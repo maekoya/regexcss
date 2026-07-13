@@ -24,5 +24,7 @@ export type {
   Variant,
   VariantHandler,
   VariantHandlerResult,
+  VariantInput,
   VariantMeta,
+  VariantObject,
 } from "./types.ts";

@@ -1,4 +1,46 @@
-import type { Variant, VariantHandlerResult } from "../types.ts";
+import type { Variant, VariantHandlerResult, VariantInput, VariantObject } from "../types.ts";
+
+// Escape regex meta characters so a user-supplied prefix is treated literally.
+const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Build a {@link Variant} tuple from a declarative {@link VariantObject}. Exposed to
+ * config authors as `createVariant(prefix, options)` (via `regexcss/helpers`), but plain
+ * objects in `variants` go through this too — the object form needs no import.
+ */
+export const buildVariant = ({ prefix, selector, parent, group, note, sample }: VariantObject): Variant => {
+  const selectorFn = typeof selector === "string" ? (s: string) => `${s}${selector}` : selector;
+  // human-readable overview for docs output (`regexcss docs`); the group is carried
+  // separately (shown as a chip), so it is not folded into this summary.
+  const summary =
+    [typeof selector === "string" ? `&${selector}` : selector ? "custom selector" : "", parent ?? ""]
+      .filter(Boolean)
+      .join(" · ") || undefined;
+  // representative output for docs: the prefixed, `\:`-escaped selector (with any
+  // selector transform applied) wrapped in the parent at-rule — `<utility>` stands
+  // in for whatever class the variant is used on.
+  const base = `.${prefix}\\:<utility>`;
+  const declBlock = `${selectorFn ? selectorFn(base) : base} { … }`;
+  const outputSample = parent ? `${parent} {\n  ${declBlock}\n}` : declBlock;
+  return [
+    new RegExp(`^${escapeRegExp(prefix)}:`),
+    (_, raw) => ({
+      matcher: raw.slice(prefix.length + 1),
+      ...(selectorFn ? { selector: selectorFn } : {}),
+      ...(parent ? { parent } : {}),
+      ...(group !== undefined ? { group } : {}),
+    }),
+    { label: prefix, ...(group !== undefined ? { group } : {}), note: note ?? summary, sample: sample ?? outputSample },
+  ];
+};
+
+/**
+ * Normalize `UserConfig.variants` entries to {@link Variant} tuples. Tuples are arrays,
+ * object definitions are not — everything downstream (matching, docs enumeration) only
+ * ever sees tuples.
+ */
+export const normalizeVariants = (variants: VariantInput[]): Variant[] =>
+  variants.map((v) => (Array.isArray(v) ? v : buildVariant(v)));
 
 export interface VariantChainResult {
   matcher: string;

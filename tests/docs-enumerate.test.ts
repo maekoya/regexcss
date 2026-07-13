@@ -207,6 +207,23 @@ describe("enumerateClasses — attribution", () => {
     ]);
   });
 
+  it("documents object-form variants with the same derived meta as createVariant", () => {
+    const rules: Rule[] = [[/^flex$/, () => ({ display: "flex" })]];
+    const result = enumerateClasses({
+      rules,
+      variants: [{ prefix: "md", parent: "@media (--md)", group: "window-size" }],
+    });
+    expect(result.variants).toEqual([
+      {
+        label: "md",
+        source: "^md:",
+        group: "window-size",
+        note: "@media (--md)",
+        sample: "@media (--md) {\n  .md\\:<utility> { … }\n}",
+      },
+    ]);
+  });
+
   it("returns no variants when the config has none", () => {
     const result = enumerateClasses({ rules: [[/^flex$/, () => ({ display: "flex" })]] });
     expect(result.variants).toEqual([]);

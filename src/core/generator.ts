@@ -13,7 +13,7 @@ import { escapeSelector } from "./escape.ts";
 import { renderLayer } from "./layer.ts";
 import { matchRule } from "./rules.ts";
 import { indentLines, stringifyDeclarations } from "./stringify.ts";
-import { applyVariantChain } from "./variants.ts";
+import { applyVariantChain, normalizeVariants } from "./variants.ts";
 
 interface Block {
   raw: string;
@@ -26,7 +26,7 @@ interface Block {
 
 const resolveConfig = (user: UserConfig): ResolvedConfig => ({
   rules: user.rules,
-  variants: user.variants ?? [],
+  variants: normalizeVariants(user.variants ?? []),
   layerName: user.layerName,
   prefix: user.prefix ?? "",
   customMedia: user.customMedia ?? {},

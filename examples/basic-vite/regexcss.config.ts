@@ -1,5 +1,4 @@
 import { type CSSObject, defineConfig } from "regexcss";
-import { createVariant } from "regexcss/helpers";
 import { flexboxGridRules, layoutRules, spacingRules, typographyRules } from "regexcss/preset";
 
 const COLOR_NAMES = ["blue", "red", "orange", "green", "teal", "purple", "pink", "gray"];
@@ -39,17 +38,20 @@ export default defineConfig({
   ],
   variants: [
     // group: 同一トークン内で window-size 系 variant は1つまで（md:sm:〜 を弾く）
-    createVariant("md", {
+    {
+      prefix: "md",
       parent: "@media (--md)",
       group: "window-size",
-    }),
-    createVariant("sm", {
+    },
+    {
+      prefix: "sm",
       parent: "@media (--sm)",
       group: "window-size",
-    }),
-    createVariant("hover", {
+    },
+    {
+      prefix: "hover",
       selector: ":hover",
       parent: "@media (any-hover: hover)",
-    }),
+    },
   ],
 });
