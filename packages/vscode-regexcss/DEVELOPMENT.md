@@ -44,6 +44,10 @@ and save — `index.html` goes dormant too, and the output channel logs
 `"../shared/**/*.html"` to the include and create a matching file above the
 config's directory.
 
+Language never gates activation — only `content.include` does. To verify: add
+`"./notes.md"` to the include, create the file with `<div class="m-4">`, and confirm
+hover/completion work even though Markdown is not a "web" language.
+
 ## How the bundle works (jiti / import.meta.url)
 
 The extension is bundled into a single CJS file (`dist/extension.cjs`) by

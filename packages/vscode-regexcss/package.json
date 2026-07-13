@@ -60,24 +60,6 @@
           ],
           "scope": "resource",
           "description": "Attribute names whose string values are treated as class lists for completion."
-        },
-        "regexcss.languages": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [
-            "html",
-            "javascript",
-            "javascriptreact",
-            "typescript",
-            "typescriptreact",
-            "vue",
-            "svelte",
-            "astro"
-          ],
-          "scope": "window",
-          "description": "VSCode language identifiers to enable hover and completion for. This replaces the default list — copy the defaults and add or remove entries as needed."
         }
       }
     }

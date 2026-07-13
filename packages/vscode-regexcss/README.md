@@ -15,7 +15,9 @@ including dynamic values that no finite class list could enumerate (`mt-73`, `w-
 ## Which files are active
 
 The extension is active only in files matched by a config's `content.include` globs
-(minus `content.exclude`) — **the same files the Vite plugin scans**:
+(minus `content.exclude`) — **the same files the Vite plugin scans**. This is the
+**only** gate: the file's language does not matter (`.php`, `.md`, custom template
+extensions just work when they are in the include).
 
 - Every `regexcss.config.{ts,mts,js,mjs,cjs}` in the workspace is discovered, and the
   config whose `content.include` matches the current file governs it. Include patterns
@@ -28,8 +30,8 @@ The extension is active only in files matched by a config's `content.include` gl
 
 ## Features
 
-- **Hover** — hover a class inside `class="…"` / `className="…"` (html, JS/TS/JSX/TSX,
-  Vue, Svelte, Astro) to see the CSS it generates, variants and at-rules included
+- **Hover** — hover a class inside `class="…"` / `className="…"` in any
+  `content.include`-matched file to see the CSS it generates, variants and at-rules included
   (`md:m-2` → `@media (--md) { .md\:m-2 { margin: 0.5rem; } }`).
   - `rem` values are annotated with their **px equivalent** in a comment
     (`padding: 2rem; /* 32px */`; multiple values become `margin: 0.5rem 1rem; /* 8px 16px */`).
@@ -42,12 +44,11 @@ The extension is active only in files matched by a config's `content.include` gl
 
 ## Supported languages
 
-`html` / `javascript` / `javascriptreact` / `typescript` / `typescriptreact` / `vue` /
-`svelte` / `astro`
-
-Customize the target languages with `regexcss.languages` — this **replaces** the default
-list, so copy the defaults (the exact VS Code language identifiers above) and add or
-remove entries as needed.
+All of them. Completion's class-attribute detection is text-based (see
+`regexcss.classAttributes`), so any language works — which files are active is decided
+by `content.include` alone. There is no language setting: to narrow where IntelliSense
+appears, narrow `content.include`/`content.exclude` in your config, which keeps the
+extension and the Vite plugin in lockstep.
 
 ## Settings
 
@@ -55,4 +56,3 @@ remove entries as needed.
 | -------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `regexcss.configPath`      | `""` (auto-discover)                               | Path to the config, relative to the workspace folder. Empty = auto-discover: the config in the workspace whose `content.include` matches the current file governs it. Even with an explicit path, the file must be matched by that config's `content.include`. |
 | `regexcss.classAttributes` | `class` / `className` / `class:list` / `classList` | Attribute names whose string values are treated as class lists for completion.                                                                                                                                                                                 |
-| `regexcss.languages`       | the 8 defaults above                               | VSCode language identifiers to enable hover and completion for. **Replaces** the default list. Changes apply without a reload.                                                                                                                                 |
