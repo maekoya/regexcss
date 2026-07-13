@@ -49,6 +49,31 @@ describe("createContentMatcher", () => {
     expect(matches?.("/proj/src/.hidden/a.ts")).toBe(false);
   });
 
+  // The config path is a literal directory, not glob text — brackets/parens in it
+  // (Next.js "[slug]" routes, macOS "Projects (old)" folders) must not be interpreted.
+  it("treats glob special characters in the config path as literals", () => {
+    const matches = createContentMatcher({ include: ["src/**/*.ts"] }, "/proj/app/[slug]");
+    expect(matches?.("/proj/app/[slug]/src/a.ts")).toBe(true);
+    // an unescaped [slug] would match any single char from the class
+    expect(matches?.("/proj/app/s/src/a.ts")).toBe(false);
+
+    const parens = createContentMatcher({ include: ["./index.html"] }, "/Users/x/Projects (old)/proj");
+    expect(parens?.("/Users/x/Projects (old)/proj/index.html")).toBe(true);
+  });
+
+  it("keeps ../ patterns working from a config dir with special characters", () => {
+    const matches = createContentMatcher({ include: ["../shared/**"] }, "/repo/[locale]/app");
+    expect(matches?.("/repo/[locale]/shared/x.html")).toBe(true);
+    expect(matches?.("/repo/l/shared/x.html")).toBe(false);
+  });
+
+  it("keeps glob meaning for the pattern itself", () => {
+    const matches = createContentMatcher({ include: ["pages/[id]/*.html"] }, "/proj");
+    // [id] in the pattern is the user's glob — a character class matching i or d
+    expect(matches?.("/proj/pages/i/a.html")).toBe(true);
+    expect(matches?.("/proj/pages/x/a.html")).toBe(false);
+  });
+
   it("returns null (dormant) for an empty or absent include", () => {
     expect(createContentMatcher({ include: [] }, "/proj")).toBeNull();
     expect(createContentMatcher(undefined, "/proj")).toBeNull();

@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import picomatch from "picomatch";
 import type { ContentConfig } from "regexcss";
 
@@ -13,12 +13,43 @@ const MATCH_OPTIONS = { dot: false, posix: true } as const;
 
 const toPosix = (p: string): string => p.replace(/\\/g, "/");
 
+// picomatch ships no escape helper (that's micromatch) — backslash every glob
+// metacharacter so the path reads as literal text; "/" separators stay untouched.
+const escapeGlob = (p: string): string => p.replace(/[\\*?[\]{}()!@+|]/g, (c) => `\\${c}`);
+
 // Mirror tinyglobby's normalizePattern with its expandDirectories:true default —
 // strip a trailing "/", then append "/**" unless the pattern already ends with "*".
 // picomatch's trailing "/**" matches zero segments, so literal file patterns like
 // "./index.html" still match the file itself, and bare directories match their contents.
+//
+// The base directory is a literal path, not a glob — escape it so a workspace path
+// containing glob characters ("app/[slug]", "Projects (old)") isn't read as a character
+// class or group (tinyglobby passes cwd as a separate literal argument, never as pattern
+// text). Leading ./ and ../ segments are consumed against configDir first, since ".."
+// can't textually climb over an escaped segment.
 const expandPattern = (pattern: string, configDir: string): string => {
-  let result = toPosix(resolve(configDir, pattern));
+  let result: string;
+  if (isAbsolute(pattern)) {
+    result = toPosix(pattern); // user-authored pattern text — keep its glob meaning
+  } else {
+    let base = resolve(configDir);
+    let rest = toPosix(pattern);
+    while (rest.startsWith("./") || rest.startsWith("../")) {
+      if (rest.startsWith("./")) rest = rest.slice(2);
+      else {
+        base = dirname(base);
+        rest = rest.slice(3);
+      }
+    }
+    if (rest === "..") {
+      base = dirname(base);
+      rest = "";
+    } else if (rest === ".") {
+      rest = "";
+    }
+    const escapedBase = escapeGlob(toPosix(base));
+    result = rest ? `${escapedBase}/${rest}` : escapedBase;
+  }
   if (result.endsWith("/")) result = result.slice(0, -1);
   if (!result.endsWith("*")) result += "/**";
   return result;
