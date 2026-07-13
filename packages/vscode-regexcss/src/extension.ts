@@ -30,7 +30,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(output);
 
   // One state per config, loaded lazily per document — supports many
-  // regexcss.config.* across a monorepo (nearest config wins).
+  // regexcss.config.* across a monorepo (the config whose content.include
+  // matches the document wins).
   const registry = createRegistry((m) => output.appendLine(m));
   const stateFor = (uri: vscode.Uri) => registry.stateFor(uri);
   const getAttributes = (uri: vscode.Uri): string[] =>
@@ -65,6 +66,9 @@ export function activate(context: vscode.ExtensionContext): void {
   watcher.onDidCreate(invalidate);
   watcher.onDidDelete(invalidate);
   context.subscriptions.push(watcher);
+
+  // adding/removing workspace folders changes which configs are discoverable
+  context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(invalidate));
 
   // react to setting changes: drop cached configs, and re-register providers when the
   // language list changed.
