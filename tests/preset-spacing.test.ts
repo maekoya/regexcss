@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
-import { createMarginRules, createSpacingRules, gapRules, marginRules, paddingRules } from "../src/preset/index.ts";
+import { gapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
+import { tailwindPreset } from "../src/preset/tailwind/index.ts";
+import { createMarginRules, marginRules } from "../src/preset/tailwind/spacing/margin.ts";
+import { paddingRules } from "../src/preset/tailwind/spacing/padding.ts";
 import type { RuleContext } from "../src/types.ts";
+
+// the category-wide cap now lives behind tailwindPreset's options
+const createSpacingRules = (options?: { max?: number }) =>
+  tailwindPreset({ include: ["spacing"], options: { spacing: options } });
 
 const ctx = (token: string): RuleContext => ({
   rawSelector: token,

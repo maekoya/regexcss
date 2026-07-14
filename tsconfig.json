@@ -22,6 +22,6 @@
       "regexcss/helpers": ["./src/helpers.ts"]
     }
   },
-  "include": ["src/**/*", "tests/**/*", "vite.config.ts", "vitest.config.ts"],
+  "include": ["src/**/*", "tests/**/*", "vite.config.ts", "vitest.config.ts", "tsdown.config.ts"],
   "exclude": ["dist", "node_modules", "examples"]
 }

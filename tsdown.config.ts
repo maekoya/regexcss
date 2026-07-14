@@ -5,7 +5,7 @@ export default defineConfig({
     index: "src/index.ts",
     vite: "src/vite.ts",
     helpers: "src/helpers.ts",
-    preset: "src/preset/index.ts",
+    "preset/tailwind": "src/preset/tailwind/index.ts",
     cli: "src/cli.ts",
     config: "src/config/load.ts",
   },

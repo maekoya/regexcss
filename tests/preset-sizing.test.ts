@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
-import {
-  createSizingRules,
-  createWidthRules,
-  heightRules,
-  maxHeightRules,
-  maxWidthRules,
-  minHeightRules,
-  minWidthRules,
-  sizeRules,
-  widthRules,
-} from "../src/preset/index.ts";
+import { tailwindPreset } from "../src/preset/tailwind/index.ts";
+import { heightRules } from "../src/preset/tailwind/sizing/height.ts";
+import { maxHeightRules } from "../src/preset/tailwind/sizing/max-height.ts";
+import { maxWidthRules } from "../src/preset/tailwind/sizing/max-width.ts";
+import { minHeightRules } from "../src/preset/tailwind/sizing/min-height.ts";
+import { minWidthRules } from "../src/preset/tailwind/sizing/min-width.ts";
+import { sizeRules } from "../src/preset/tailwind/sizing/size.ts";
+import { createWidthRules, widthRules } from "../src/preset/tailwind/sizing/width.ts";
 import type { CSSObject, Rule, RuleContext } from "../src/types.ts";
+
+// the category-wide cap now lives behind tailwindPreset's options
+const createSizingRules = (options?: { max?: number }) =>
+  tailwindPreset({ include: ["sizing"], options: { sizing: options } });
 
 const ctx = (token: string): RuleContext => ({
   rawSelector: token,

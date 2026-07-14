@@ -109,28 +109,49 @@ rules: [
 
 ### Preset caps
 
-Preset rules with numeric scales are capped so they stay enumerable (and out-of-range classes like `m-9999` no longer match). Each capped preset ships a factory to tune the bound:
+Preset rules with numeric scales are capped so they stay enumerable (and out-of-range classes like `m-9999` no longer match). Tune the bounds through `tailwindPreset`'s `options` (see below):
 
 ```ts
-import { createSpacingRules, createSizingRules, createZIndexRules } from "regexcss/preset";
+...tailwindPreset({
+  options: {
+    spacing: { max: 32 }, // default 96 (margin, padding)
+    sizing: { max: 64 }, // default 96 (w, h, min-*, max-*, size)
+    layout: { zIndex: { max: 100 } }, // default 50
+  },
+}),
+```
+
+Defaults: `spacing` / `gap` / `sizing` → 96, `grid-cols` / `grid-rows` / `row-*` / `order` → 12, `z-index` → 50, `line-clamp` → 6.
+
+### Selecting presets
+
+`tailwindPreset` builds a rule set from preset names — categories (`"spacing"`) or single pages (`"typography/line-clamp"`), emitted in `include` order (cascade order). `exclude` and per-category / per-page factory `options` are optional; with no arguments every category is included:
+
+```ts
+import { tailwindPreset } from "regexcss/preset/tailwind";
 
 rules: [
-  ...createSpacingRules({ max: 32 }), // default 96 (margin, padding)
-  ...createSizingRules({ max: 64 }),  // default 96 (w, h, min-*, max-*, size)
-  ...createZIndexRules({ max: 100 }), // default 50
+  ...tailwindPreset({
+    include: ["spacing", "layout", "sizing", "typography/line-clamp"],
+    exclude: ["layout/overscroll"], // drop one page, keep the rest of its category
+    options: {
+      sizing: { max: 64 }, // category options apply to every page in it...
+      "sizing/width": { max: 32 }, // ...page options override page-by-page
+    },
+  }),
 ],
 ```
 
-Defaults: `spacing` / `gap` / `sizing` → 96, `grid-cols` / `grid-rows` / `row-*` / `order` → 12, `z-index` → 50, `line-clamp` → 6. The plain rule arrays (`spacingRules`, ...) use the defaults.
+All names are typed (`TailwindPresetName` = categories + `category/page` paths derived from the page tables), so unknown names and mismatched options fail at compile time. Duplicates are deduped (first occurrence wins), and `exclude` always wins over `include`. The category/page tables are exposed as `tailwindPreset.categories`.
 
 ## Entry points
 
-| Import             | What you get                                                              |
-| ------------------ | ------------------------------------------------------------------------- |
-| `regexcss`         | `defineConfig`, `createGenerator`, types                                  |
-| `regexcss/vite`    | The Vite plugin                                                           |
-| `regexcss/helpers` | Unit helpers (`rem`, `px`, ...), `@custom-media` parsers, `createVariant` |
-| `regexcss/preset`  | Optional Tailwind-flavored rule sets (`spacingRules`, `layoutRules`, ...) |
+| Import                     | What you get                                                              |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `regexcss`                 | `defineConfig`, `createGenerator`, types                                  |
+| `regexcss/vite`            | The Vite plugin                                                           |
+| `regexcss/helpers`         | Unit helpers (`rem`, `px`, ...), `@custom-media` parsers, `createVariant` |
+| `regexcss/preset/tailwind` | `tailwindPreset` — the Tailwind-flavored rule sets                        |
 
 ## Example
 

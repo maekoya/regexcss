@@ -1,5 +1,5 @@
 import { type CSSObject, defineConfig } from "regexcss";
-import { flexboxGridRules, layoutRules, spacingRules, typographyRules } from "regexcss/preset";
+import { tailwindPreset } from "regexcss/preset/tailwind";
 
 const COLOR_NAMES = ["blue", "red", "orange", "green", "teal", "purple", "pink", "gray"];
 
@@ -8,10 +8,7 @@ export default defineConfig({
     include: ["./index.html"],
   },
   rules: [
-    ...spacingRules,
-    ...layoutRules,
-    ...typographyRules,
-    ...flexboxGridRules,
+    ...tailwindPreset({ include: ["spacing", "layout", "typography", "flexbox-grid"] }),
     [
       /^text-(2xs|xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl)$/,
       ([, size]) => ({

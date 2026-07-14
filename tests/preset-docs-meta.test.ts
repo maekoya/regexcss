@@ -1,31 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { enumerateClasses } from "../src/docs/enumerate.ts";
-import {
-  colorRules,
-  flexboxGridRules,
-  gapRules,
-  justifyContentRules,
-  layoutRules,
-  marginRules,
-  orderRules,
-  paddingRules,
-  sizingRules,
-  spacingRules,
-  typographyRules,
-} from "../src/preset/index.ts";
+import { gapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
+import { justifyContentRules } from "../src/preset/tailwind/flexbox-grid/justify-content.ts";
+import { orderRules } from "../src/preset/tailwind/flexbox-grid/order.ts";
+import { tailwindPreset, type TailwindPresetName } from "../src/preset/tailwind/index.ts";
+import { marginRules } from "../src/preset/tailwind/spacing/margin.ts";
+import { paddingRules } from "../src/preset/tailwind/spacing/padding.ts";
 import type { Rule } from "../src/types.ts";
 
-// Sweep every preset aggregate through the docs enumerator. This guards against
+// Sweep every preset category through the docs enumerator. This guards against
 // samples drifting from their regexes forever: a dead sample or a rule that became
 // non-enumerable shows up here as a warning / empty class list.
-const aggregates: Array<[string, Rule[]]> = [
-  ["color", colorRules],
-  ["flexbox-grid", flexboxGridRules],
-  ["layout", layoutRules],
-  ["sizing", sizingRules],
-  ["spacing", spacingRules],
-  ["typography", typographyRules],
-];
+const aggregates: Array<[string, Rule[]]> = Object.keys(tailwindPreset.categories).map((category) => [
+  category,
+  tailwindPreset({ include: [category as TailwindPresetName] }),
+]);
 
 describe.each(aggregates)("preset docs metadata — %s", (_name, rules) => {
   const result = enumerateClasses({ rules });

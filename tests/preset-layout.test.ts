@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
-import {
-  createZIndexRules,
-  displayRules,
-  objectFitRules,
-  objectPositionRules,
-  overflowRules,
-  overscrollRules,
-  positionRules,
-  zIndexRules,
-} from "../src/preset/index.ts";
+import { displayRules } from "../src/preset/tailwind/layout/display.ts";
+import { objectFitRules } from "../src/preset/tailwind/layout/object-fit.ts";
+import { objectPositionRules } from "../src/preset/tailwind/layout/object-position.ts";
+import { overflowRules } from "../src/preset/tailwind/layout/overflow.ts";
+import { overscrollRules } from "../src/preset/tailwind/layout/overscroll.ts";
+import { positionRules } from "../src/preset/tailwind/layout/position.ts";
+import { createZIndexRules, zIndexRules } from "../src/preset/tailwind/layout/z-index.ts";
 import type { Rule, RuleContext } from "../src/types.ts";
 
 const ctx = (token: string): RuleContext => ({

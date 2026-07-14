@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { matchRule } from "../src/core/rules.ts";
-import { backgroundColorRules, colorRules } from "../src/preset/index.ts";
+import { backgroundColorRules } from "../src/preset/tailwind/color/background-color.ts";
+import { tailwindPreset } from "../src/preset/tailwind/index.ts";
 import type { RuleContext } from "../src/types.ts";
+
+const colorRules = tailwindPreset({ include: ["color"] });
 
 const ctx = (token: string): RuleContext => ({
   rawSelector: token,
@@ -40,7 +43,7 @@ describe("preset color background-color", () => {
     expect(match(token)).toBeUndefined();
   });
 
-  it("is included in the colorRules aggregate", () => {
+  it("is included in the color category selection", () => {
     expect(match("bg-blue", colorRules)).toEqual({ backgroundColor: "blue" });
     expect(match("bg-", colorRules)).toBeUndefined();
   });
