@@ -22,5 +22,5 @@ export const objectPositionRules: Rule[] = withMeta(
       ([, k]) => ({ "object-position": POSITIONS[k ?? ""] ?? "" }),
     ],
   ],
-  { label: "object-position", category: "layout", tags: ["preset"] },
+  { label: "object-position", category: "layout", tags: ["preset", "tailwind"] },
 );

@@ -57,5 +57,5 @@ export const displayRules: Rule[] = withMeta(
     [/^sr-only$/, () => srOnly],
     [/^not-sr-only$/, () => notSrOnly],
   ],
-  { label: "display", category: "layout", tags: ["preset"] },
+  { label: "display", category: "layout", tags: ["preset", "tailwind"] },
 );

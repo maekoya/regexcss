@@ -1,14 +1,24 @@
-import { type CSSObject, defineConfig } from "regexcss";
+import { defineConfig } from "regexcss";
 import { tailwindPreset } from "regexcss/preset/tailwind";
-
-const COLOR_NAMES = ["blue", "red", "orange", "green", "teal", "purple", "pink", "gray"];
 
 export default defineConfig({
   content: {
     include: ["./index.html"],
   },
   rules: [
-    ...tailwindPreset({ include: ["spacing", "layout", "typography", "flexbox-grid"] }),
+    ...tailwindPreset({
+      include: ["spacing", "layout", "typography", "flexbox-grid", "sizing"],
+      options: {
+        "typography/font-family": {
+          sans: "var(--font-sans)",
+          serif: "var(--font-serif)",
+          mono: "var(--font-mono)",
+          notoSans: "var(--font-noto-sans)",
+        },
+        sizing: { excludeContainerClasses: true },
+        spacing: { excludeNegativeClasses: true },
+      },
+    }),
     [
       /^text-(2xs|xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl)$/,
       ([, size]) => ({
@@ -16,16 +26,7 @@ export default defineConfig({
         "line-height": `var(--text-${size}-lh)`,
       }),
     ],
-    [
-      new RegExp(`^(text|bg)-(${COLOR_NAMES.join("|")})-(1[0-2]|[1-9])$`),
-      ([, style, color, level]): CSSObject =>
-        style === "text" ? { color: `var(--${color}-${level})` } : { "background-color": `var(--${color}-${level})` },
-    ],
-    [
-      /^(text|bg)-(black|white)-a((?:1[012]?|[1-9]))$/,
-      ([, style, color, level]): CSSObject =>
-        style === "text" ? { color: `var(--${color}-a${level})` } : { "background-color": `var(--${color}-a${level})` },
-    ],
+
     [
       /^text-(black|white)$/,
       ([, color]) => ({

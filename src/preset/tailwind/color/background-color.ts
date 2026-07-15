@@ -14,5 +14,5 @@ export const backgroundColorRules: Rule[] = withMeta(
       { samples: [{ class: "bg-<color>", style: "background-color: <color>;" }] },
     ],
   ],
-  { label: "background-color", category: "color", tags: ["preset"] },
+  { label: "background-color", category: "color", tags: ["preset", "tailwind"] },
 );

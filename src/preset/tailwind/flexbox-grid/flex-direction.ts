@@ -12,5 +12,5 @@ const FLEX_DIRECTION: Record<string, string> = {
 
 export const flexDirectionRules: Rule[] = withMeta(
   [[/^flex-(row-reverse|row|col-reverse|col)$/, ([, k]) => ({ "flex-direction": FLEX_DIRECTION[k ?? ""] ?? "" })]],
-  { label: "flex-direction", category: "flexbox-grid", tags: ["preset"] },
+  { label: "flex-direction", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

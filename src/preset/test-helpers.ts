@@ -1,5 +1,5 @@
-import { matchRule } from "../src/core/rules.ts";
-import type { CSSObject, Rule, RuleContext } from "../src/types.ts";
+import { matchRule } from "../core/rules.ts";
+import type { CSSObject, Rule, RuleContext } from "../types.ts";
 
 /** A minimal RuleContext for matching a bare token (no variants). */
 export const ctx = (token: string): RuleContext => ({

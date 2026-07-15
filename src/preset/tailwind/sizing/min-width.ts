@@ -12,5 +12,5 @@ export interface MinWidthOptions {
 export const createMinWidthRules = ({ max }: MinWidthOptions = {}): Rule[] =>
   withMeta(
     makeSizingRules("min-w", "min", { screen: "100vw", axis: "w", max }, (v) => ({ "min-width": v })),
-    { label: "min-width", category: "sizing", tags: ["preset"] },
+    { label: "min-width", category: "sizing", tags: ["preset", "tailwind"] },
   );

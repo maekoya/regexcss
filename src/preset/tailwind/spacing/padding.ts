@@ -35,5 +35,5 @@ export const createPaddingRules = ({ max = 96 }: PaddingOptions = {}): Rule[] =>
         { samples: numericSamples },
       ],
     ],
-    { label: "padding", category: "spacing", tags: ["preset"] },
+    { label: "padding", category: "spacing", tags: ["preset", "tailwind"] },
   );

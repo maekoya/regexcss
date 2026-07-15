@@ -11,5 +11,5 @@ const VALUES: Record<string, string> = {
 
 export const textTransformRules: Rule[] = withMeta(
   [[/^(uppercase|lowercase|capitalize|normal-case)$/, ([, k]) => ({ "text-transform": VALUES[k ?? ""] ?? "" })]],
-  { label: "text-transform", category: "typography", tags: ["preset"] },
+  { label: "text-transform", category: "typography", tags: ["preset", "tailwind"] },
 );

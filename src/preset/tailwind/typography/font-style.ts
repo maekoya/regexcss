@@ -9,5 +9,5 @@ const VALUES: Record<string, string> = {
 
 export const fontStyleRules: Rule[] = withMeta(
   [[/^(not-italic|italic)$/, ([, k]) => ({ "font-style": VALUES[k ?? ""] ?? "" })]],
-  { label: "font-style", category: "typography", tags: ["preset"] },
+  { label: "font-style", category: "typography", tags: ["preset", "tailwind"] },
 );

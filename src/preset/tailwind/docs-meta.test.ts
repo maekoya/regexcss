@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { enumerateClasses } from "../src/docs/enumerate.ts";
-import { createGapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
-import { justifyContentRules } from "../src/preset/tailwind/flexbox-grid/justify-content.ts";
-import { createOrderRules } from "../src/preset/tailwind/flexbox-grid/order.ts";
-import { tailwindPreset, type TailwindPresetName } from "../src/preset/tailwind/index.ts";
-import { createMarginRules } from "../src/preset/tailwind/spacing/margin.ts";
-import { createPaddingRules } from "../src/preset/tailwind/spacing/padding.ts";
-import type { Rule } from "../src/types.ts";
+import { enumerateClasses } from "../../docs/enumerate.ts";
+import type { Rule } from "../../types.ts";
+import { createGapRules } from "./flexbox-grid/gap.ts";
+import { justifyContentRules } from "./flexbox-grid/justify-content.ts";
+import { createOrderRules } from "./flexbox-grid/order.ts";
+import { tailwindPreset, type TailwindPresetName } from "./index.ts";
+import { createMarginRules } from "./spacing/margin.ts";
+import { createPaddingRules } from "./spacing/padding.ts";
 
 const gapRules = createGapRules();
 const orderRules = createOrderRules();
@@ -35,10 +35,11 @@ describe.each(aggregates)("preset docs metadata — %s", (_name, rules) => {
     }
   });
 
-  it("every rule carries a Tailwind-corresponding label and the preset tag", () => {
+  it("every rule carries a Tailwind-corresponding label and the preset/tailwind tags", () => {
     for (const rule of result.rules) {
       expect(rule.label, `/${rule.source}/ should have a label`).toBeTruthy();
       expect(rule.tags, `/${rule.source}/ should be tagged as preset`).toContain("preset");
+      expect(rule.tags, `/${rule.source}/ should be tagged as tailwind`).toContain("tailwind");
     }
   });
 

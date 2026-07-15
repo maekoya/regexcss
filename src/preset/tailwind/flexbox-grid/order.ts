@@ -29,5 +29,5 @@ export const createOrderRules = ({ max = 12 }: OrderOptions = {}): Rule[] =>
         },
       ],
     ],
-    { label: "order", category: "flexbox-grid", tags: ["preset"] },
+    { label: "order", category: "flexbox-grid", tags: ["preset", "tailwind"] },
   );

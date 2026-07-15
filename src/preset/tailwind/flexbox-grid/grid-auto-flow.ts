@@ -18,5 +18,5 @@ export const gridAutoFlowRules: Rule[] = withMeta(
       ([, k]) => ({ "grid-auto-flow": GRID_AUTO_FLOW[k ?? ""] ?? "" }),
     ],
   ],
-  { label: "grid-auto-flow", category: "flexbox-grid", tags: ["preset"] },
+  { label: "grid-auto-flow", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

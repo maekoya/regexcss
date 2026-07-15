@@ -11,5 +11,5 @@ const GRID_AUTO_COLUMNS: Record<string, string> = {
 
 export const gridAutoColumnsRules: Rule[] = withMeta(
   [[/^auto-cols-(auto|min|max|fr)$/, ([, k]) => ({ "grid-auto-columns": GRID_AUTO_COLUMNS[k ?? ""] ?? "" })]],
-  { label: "grid-auto-columns", category: "flexbox-grid", tags: ["preset"] },
+  { label: "grid-auto-columns", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

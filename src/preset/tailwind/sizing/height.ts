@@ -12,5 +12,5 @@ export interface HeightOptions {
 export const createHeightRules = ({ max }: HeightOptions = {}): Rule[] =>
   withMeta(
     makeSizingRules("h", "base", { screen: "100vh", axis: "h", max }, (v) => ({ height: v })),
-    { label: "height", category: "sizing", tags: ["preset"] },
+    { label: "height", category: "sizing", tags: ["preset", "tailwind"] },
   );

@@ -20,5 +20,5 @@ export const justifyContentRules: Rule[] = withMeta(
       ([, k]) => ({ "justify-content": JUSTIFY_CONTENT[k ?? ""] ?? "" }),
     ],
   ],
-  { label: "justify-content", category: "flexbox-grid", tags: ["preset"] },
+  { label: "justify-content", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

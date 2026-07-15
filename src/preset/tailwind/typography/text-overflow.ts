@@ -7,5 +7,5 @@ export const textOverflowRules: Rule[] = withMeta(
     [/^truncate$/, () => ({ overflow: "hidden", "text-overflow": "ellipsis", "white-space": "nowrap" })],
     [/^text-(ellipsis|clip)$/, ([, v]) => ({ "text-overflow": v ?? "" })],
   ],
-  { label: "text-overflow", category: "typography", tags: ["preset"] },
+  { label: "text-overflow", category: "typography", tags: ["preset", "tailwind"] },
 );

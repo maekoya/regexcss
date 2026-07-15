@@ -12,6 +12,11 @@ export const spacingUtilities = {
 export interface SpacingOptions {
   /** Largest value the numeric scale accepts, inclusive (default 96). Applies to both margin and padding. */
   max?: number;
+  /**
+   * Drop the negative-margin rules (`-m-2`, `-mx-4`, ...). Only margin has
+   * negatives, so this affects `spacing/margin`. Default false.
+   */
+  excludeNegativeClasses?: boolean;
 }
 
 // One shared options bag for every utility (SpacingOptions is structurally each utility's own options).
