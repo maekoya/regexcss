@@ -5,7 +5,7 @@ import type { CSSObject, Rule } from "../../../types.ts";
 // Shared builder for the sizing utilities (width / height / min-* / max-* / size).
 // Every axis shares the same shape: a numeric spacing scale, fractions, and a set of
 // keyword values. Only the keyword set, the `screen` value (100vw vs 100vh) and the
-// emitted property differ per page.
+// emitted property differ per utility.
 
 // integer or decimal, e.g. `4`, `0.5`, `.5`
 const NUM = "(\\d+(?:\\.\\d+)?|\\.\\d+)";
@@ -54,7 +54,7 @@ const keywords = (kind: Kind, { screen, axis, container }: Options): Record<stri
 };
 
 /**
- * Build the rule list for a sizing page.
+ * Build the rule list for a sizing utility.
  *
  * @param prefix class-name prefix (`w`, `min-w`, `size`, ...)
  * @param kind   keyword flavour (controls auto vs none)

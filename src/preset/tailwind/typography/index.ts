@@ -1,4 +1,4 @@
-import type { PageTable } from "../../shared/page-table.ts";
+import type { UtilityTable } from "../../shared/utility-table.ts";
 import { fontFamilyRules } from "./font-family.ts";
 import { fontStyleRules } from "./font-style.ts";
 import { fontVariantNumericRules } from "./font-variant-numeric.ts";
@@ -13,11 +13,11 @@ import { verticalAlignRules } from "./vertical-align.ts";
 import { whiteSpaceRules } from "./white-space.ts";
 import { wordBreakRules } from "./word-break.ts";
 
-// ONE canonical page table. Key order = cascade order; keys are the page file
+// ONE canonical utility table. Key order = cascade order; keys are the utility file
 // basenames and become the `typography/<slug>` names accepted by tailwindPreset.
-// Factory pages (line-clamp) are tuned via page-path options, e.g.
+// Factory utilities (line-clamp) are tuned via utility-path options, e.g.
 // `options: { "typography/line-clamp": { max: 3 } }`.
-export const typographyPages = {
+export const typographyUtilities = {
   "font-family": fontFamilyRules,
   "font-style": fontStyleRules,
   "font-variant-numeric": fontVariantNumericRules,
@@ -31,4 +31,4 @@ export const typographyPages = {
   "vertical-align": verticalAlignRules,
   "white-space": whiteSpaceRules,
   "word-break": wordBreakRules,
-} satisfies PageTable;
+} satisfies UtilityTable;

@@ -1,4 +1,4 @@
-import type { PageTable } from "../../shared/page-table.ts";
+import type { UtilityTable } from "../../shared/utility-table.ts";
 import { alignContentRules } from "./align-content.ts";
 import { alignItemsRules } from "./align-items.ts";
 import { alignSelfRules } from "./align-self.ts";
@@ -16,11 +16,11 @@ import { justifyItemsRules } from "./justify-items.ts";
 import { justifySelfRules } from "./justify-self.ts";
 import { createOrderRules } from "./order.ts";
 
-// ONE canonical page table. Key order = cascade order; keys are the page file
+// ONE canonical utility table. Key order = cascade order; keys are the utility file
 // basenames and become the `flexbox-grid/<slug>` names accepted by tailwindPreset.
-// Factory pages (gap, grid-row, grid-template-*, order) are tuned via
-// page-path options, e.g. `options: { "flexbox-grid/gap": { max: 4 } }`.
-export const flexboxGridPages = {
+// Factory utilities (gap, grid-row, grid-template-*, order) are tuned via
+// utility-path options, e.g. `options: { "flexbox-grid/gap": { max: 4 } }`.
+export const flexboxGridUtilities = {
   "align-content": alignContentRules,
   "align-items": alignItemsRules,
   "align-self": alignSelfRules,
@@ -37,4 +37,4 @@ export const flexboxGridPages = {
   "justify-items": justifyItemsRules,
   "justify-self": justifySelfRules,
   order: createOrderRules,
-} satisfies PageTable;
+} satisfies UtilityTable;

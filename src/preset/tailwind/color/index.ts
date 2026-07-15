@@ -1,8 +1,8 @@
-import type { PageTable } from "../../shared/page-table.ts";
+import type { UtilityTable } from "../../shared/utility-table.ts";
 import { backgroundColorRules } from "./background-color.ts";
 
-// ONE canonical page table. Key order = cascade order; keys are the page file
+// ONE canonical utility table. Key order = cascade order; keys are the utility file
 // basenames and become the `color/<slug>` names accepted by tailwindPreset.
-export const colorPages = {
+export const colorUtilities = {
   "background-color": backgroundColorRules,
-} satisfies PageTable;
+} satisfies UtilityTable;

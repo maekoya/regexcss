@@ -125,7 +125,7 @@ Defaults: `spacing` / `gap` / `sizing` → 96, `grid-cols` / `grid-rows` / `row-
 
 ### Selecting presets
 
-`tailwindPreset` builds a rule set from preset names — categories (`"spacing"`) or single pages (`"typography/line-clamp"`), emitted in `include` order (cascade order). `exclude` and per-category / per-page factory `options` are optional; with no arguments every category is included:
+`tailwindPreset` builds a rule set from preset names — categories (`"spacing"`) or single utilities (`"typography/line-clamp"`), emitted in `include` order (cascade order). `exclude` and per-category / per-utility factory `options` are optional; with no arguments every category is included:
 
 ```ts
 import { tailwindPreset } from "regexcss/preset/tailwind";
@@ -133,16 +133,16 @@ import { tailwindPreset } from "regexcss/preset/tailwind";
 rules: [
   ...tailwindPreset({
     include: ["spacing", "layout", "sizing", "typography/line-clamp"],
-    exclude: ["layout/overscroll"], // drop one page, keep the rest of its category
+    exclude: ["layout/overscroll"], // drop one utility, keep the rest of its category
     options: {
-      sizing: { max: 64 }, // category options apply to every page in it...
-      "sizing/width": { max: 32 }, // ...page options override page-by-page
+      sizing: { max: 64 }, // category options apply to every utility in it...
+      "sizing/width": { max: 32 }, // ...utility options override utility-by-utility
     },
   }),
 ],
 ```
 
-All names are typed (`TailwindPresetName` = categories + `category/page` paths derived from the page tables), so unknown names and mismatched options fail at compile time. Duplicates are deduped (first occurrence wins), and `exclude` always wins over `include`. Category-level option keys exist only for the shared-scale categories (`sizing`, `spacing`); every other tunable page takes its options via the `category/page` key. The category/page tables are exposed as `tailwindPreset.categories`.
+All names are typed (`TailwindPresetName` = categories + `category/utility` paths derived from the utility tables), so unknown names and mismatched options fail at compile time. Duplicates are deduped (first occurrence wins), and `exclude` always wins over `include`. Category-level option keys exist only for the shared-scale categories (`sizing`, `spacing`); every other tunable utility takes its options via the `category/utility` key. The category/utility tables are exposed as `tailwindPreset.categories`.
 
 ## Entry points
 

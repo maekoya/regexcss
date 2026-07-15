@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createGapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
 import { tailwindPreset } from "../src/preset/tailwind/index.ts";
+import type { SpacingOptions } from "../src/preset/tailwind/spacing/index.ts";
 import { createMarginRules } from "../src/preset/tailwind/spacing/margin.ts";
 import { createPaddingRules } from "../src/preset/tailwind/spacing/padding.ts";
-import type { SpacingOptions } from "../src/preset/tailwind/spacing/index.ts";
 import { match as matchIn } from "./preset-helpers.ts";
 
 const gapRules = createGapRules();

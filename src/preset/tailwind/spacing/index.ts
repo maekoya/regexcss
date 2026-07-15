@@ -1,19 +1,19 @@
-import { type PageOptionsOf, type PageTable, sharedPageOptions } from "../../shared/page-table.ts";
+import { type UtilityOptionsOf, type UtilityTable, sharedUtilityOptions } from "../../shared/utility-table.ts";
 import { createMarginRules } from "./margin.ts";
 import { createPaddingRules } from "./padding.ts";
 
-// ONE canonical page table. Key order = cascade order; keys are the page file
+// ONE canonical utility table. Key order = cascade order; keys are the utility file
 // basenames and become the `spacing/<slug>` names accepted by tailwindPreset.
-export const spacingPages = {
+export const spacingUtilities = {
   margin: createMarginRules,
   padding: createPaddingRules,
-} satisfies PageTable;
+} satisfies UtilityTable;
 
 export interface SpacingOptions {
   /** Largest value the numeric scale accepts, inclusive (default 96). Applies to both margin and padding. */
   max?: number;
 }
 
-// One shared options bag for every page (SpacingOptions is structurally each page's own options).
-export const spacingPageOptions = (options: SpacingOptions = {}): PageOptionsOf<typeof spacingPages> =>
-  sharedPageOptions(spacingPages, options);
+// One shared options bag for every utility (SpacingOptions is structurally each utility's own options).
+export const spacingUtilityOptions = (options: SpacingOptions = {}): UtilityOptionsOf<typeof spacingUtilities> =>
+  sharedUtilityOptions(spacingUtilities, options);

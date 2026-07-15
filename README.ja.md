@@ -123,7 +123,7 @@ rules: [
 
 ### プリセットの選択
 
-`tailwindPreset` はプリセット名からルールセットを組み立てます。名前はカテゴリ（`"spacing"`）でも単一ページ（`"typography/line-clamp"`）でもよく、`include` の順に出力されます（カスケード順）。`exclude` とカテゴリ／ページごとの factory `options` は任意で、引数なしなら全カテゴリが含まれます:
+`tailwindPreset` はプリセット名からルールセットを組み立てます。名前はカテゴリ（`"spacing"`）でも単一ユーティリティ（`"typography/line-clamp"`）でもよく、`include` の順に出力されます（カスケード順）。`exclude` とカテゴリ／ユーティリティごとの factory `options` は任意で、引数なしなら全カテゴリが含まれます:
 
 ```ts
 import { tailwindPreset } from "regexcss/preset/tailwind";
@@ -131,16 +131,16 @@ import { tailwindPreset } from "regexcss/preset/tailwind";
 rules: [
   ...tailwindPreset({
     include: ["spacing", "layout", "sizing", "typography/line-clamp"],
-    exclude: ["layout/overscroll"], // 1ページだけ除外、カテゴリの残りは維持
+    exclude: ["layout/overscroll"], // 1ユーティリティだけ除外、カテゴリの残りは維持
     options: {
-      sizing: { max: 64 }, // カテゴリオプションは配下の全ページに適用...
-      "sizing/width": { max: 32 }, // ...ページオプションがページ単位で上書き
+      sizing: { max: 64 }, // カテゴリオプションは配下の全ユーティリティに適用...
+      "sizing/width": { max: 32 }, // ...ユーティリティオプションが個別に上書き
     },
   }),
 ],
 ```
 
-名前はすべて型付き（`TailwindPresetName` = カテゴリ + ページテーブル由来の `category/page` パス）なので、存在しない名前やオプションの取り違えはコンパイル時に検出されます。重複は初出優先で除去され、`exclude` は常に `include` より優先されます。カテゴリ単位のオプションキーは共有スケールを持つカテゴリ（`sizing`、`spacing`）だけで、それ以外の調整可能ページは `category/page` キーでオプションを受け取ります。カテゴリ／ページのテーブルは `tailwindPreset.categories` として参照できます。
+名前はすべて型付き（`TailwindPresetName` = カテゴリ + ユーティリティテーブル由来の `category/utility` パス）なので、存在しない名前やオプションの取り違えはコンパイル時に検出されます。重複は初出優先で除去され、`exclude` は常に `include` より優先されます。カテゴリ単位のオプションキーは共有スケールを持つカテゴリ（`sizing`、`spacing`）だけで、それ以外の調整可能ユーティリティは `category/utility` キーでオプションを受け取ります。カテゴリ／ユーティリティのテーブルは `tailwindPreset.categories` として参照できます。
 
 ## エントリーポイント
 
