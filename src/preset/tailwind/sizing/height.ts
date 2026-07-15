@@ -14,5 +14,3 @@ export const createHeightRules = ({ max }: HeightOptions = {}): Rule[] =>
     makeSizingRules("h", "base", { screen: "100vh", axis: "h", max }, (v) => ({ height: v })),
     { label: "height", category: "sizing", tags: ["preset"] },
   );
-
-export const heightRules: Rule[] = createHeightRules();

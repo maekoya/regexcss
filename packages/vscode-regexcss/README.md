@@ -7,7 +7,7 @@ class names.
 Because regexcss is regex-driven, **any class that matches a rule can be hovered** —
 including dynamic values that no finite class list could enumerate (`mt-73`, `w-1/3`, …).
 
-> **Prerequisite:** `regexcss.config` itself imports `regexcss` (`regexcss/preset`, etc.),
+> **Prerequisite:** `regexcss.config` itself imports `regexcss` (`regexcss/preset/tailwind`, etc.),
 > so **`regexcss` must be installed in your project**. In a project without a config — or
 > with a config whose `content.include` is empty — the extension stays dormant and does
 > nothing.

@@ -4,29 +4,32 @@ import {
   type PresetOptionsMapOf,
   type PresetSelectionOf,
 } from "../shared/define-preset.ts";
-import { colorPageOptions, colorPages } from "./color/index.ts";
-import { flexboxGridPageOptions, flexboxGridPages } from "./flexbox-grid/index.ts";
-import { layoutPageOptions, layoutPages } from "./layout/index.ts";
+import { colorPages } from "./color/index.ts";
+import { flexboxGridPages } from "./flexbox-grid/index.ts";
+import { layoutPages } from "./layout/index.ts";
 import { sizingPageOptions, sizingPages } from "./sizing/index.ts";
 import { spacingPageOptions, spacingPages } from "./spacing/index.ts";
-import { typographyPageOptions, typographyPages } from "./typography/index.ts";
+import { typographyPages } from "./typography/index.ts";
 
 /**
  * Build a rule set from preset names.
  *
  * `tailwindPreset({ include: ["spacing", "typography/line-clamp"] })` — the
  * given categories/pages, in the given order — plus optional `exclude` and
- * per-category / per-page `options`. The category map is exposed as
- * `tailwindPreset.categories`; its key order is the canonical rule order.
+ * `options`. Category-level options exist only for the shared-`max`
+ * categories (`sizing`, `spacing`); every other factory page is tuned via its
+ * page path, e.g. `options: { "layout/z-index": { max: 100 } }`. The category
+ * map is exposed as `tailwindPreset.categories`; its key order is the
+ * canonical rule order.
  */
 export const tailwindPreset = definePreset(
   {
-    color: { pages: colorPages, pageOptions: colorPageOptions },
-    "flexbox-grid": { pages: flexboxGridPages, pageOptions: flexboxGridPageOptions },
-    layout: { pages: layoutPages, pageOptions: layoutPageOptions },
+    color: { pages: colorPages },
+    "flexbox-grid": { pages: flexboxGridPages },
+    layout: { pages: layoutPages },
     sizing: { pages: sizingPages, pageOptions: sizingPageOptions },
     spacing: { pages: spacingPages, pageOptions: spacingPageOptions },
-    typography: { pages: typographyPages, pageOptions: typographyPageOptions },
+    typography: { pages: typographyPages },
   },
   "tailwind",
 );

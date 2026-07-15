@@ -1,22 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../src/core/rules.ts";
-import { gapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
+import { createGapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
 import { tailwindPreset } from "../src/preset/tailwind/index.ts";
-import { createMarginRules, marginRules } from "../src/preset/tailwind/spacing/margin.ts";
-import { paddingRules } from "../src/preset/tailwind/spacing/padding.ts";
-import type { RuleContext } from "../src/types.ts";
+import { createMarginRules } from "../src/preset/tailwind/spacing/margin.ts";
+import { createPaddingRules } from "../src/preset/tailwind/spacing/padding.ts";
+import type { SpacingOptions } from "../src/preset/tailwind/spacing/index.ts";
+import { match as matchIn } from "./preset-helpers.ts";
 
-// the category-wide cap now lives behind tailwindPreset's options
-const createSpacingRules = (options?: { max?: number }) =>
+const gapRules = createGapRules();
+const marginRules = createMarginRules();
+const paddingRules = createPaddingRules();
+
+// the category-wide cap lives behind tailwindPreset's options
+const createSpacingRules = (options?: SpacingOptions) =>
   tailwindPreset({ include: ["spacing"], options: { spacing: options } });
 
-const ctx = (token: string): RuleContext => ({
-  rawSelector: token,
-  currentSelector: token,
-  variants: [],
-});
-
-const match = (token: string, rules = paddingRules) => matchRule(token, rules, ctx(token))?.css;
+const match = (token: string, rules = paddingRules) => matchIn(token, rules);
 
 describe("preset spacing numeric guard", () => {
   it("accepts integers and decimals (1 unit = 0.25rem)", () => {

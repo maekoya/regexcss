@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { enumerateClasses } from "../src/docs/enumerate.ts";
-import { gapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
+import { createGapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
 import { justifyContentRules } from "../src/preset/tailwind/flexbox-grid/justify-content.ts";
-import { orderRules } from "../src/preset/tailwind/flexbox-grid/order.ts";
+import { createOrderRules } from "../src/preset/tailwind/flexbox-grid/order.ts";
 import { tailwindPreset, type TailwindPresetName } from "../src/preset/tailwind/index.ts";
-import { marginRules } from "../src/preset/tailwind/spacing/margin.ts";
-import { paddingRules } from "../src/preset/tailwind/spacing/padding.ts";
+import { createMarginRules } from "../src/preset/tailwind/spacing/margin.ts";
+import { createPaddingRules } from "../src/preset/tailwind/spacing/padding.ts";
 import type { Rule } from "../src/types.ts";
+
+const gapRules = createGapRules();
+const orderRules = createOrderRules();
+const marginRules = createMarginRules();
+const paddingRules = createPaddingRules();
 
 // Sweep every preset category through the docs enumerator. This guards against
 // samples drifting from their regexes forever: a dead sample or a rule that became

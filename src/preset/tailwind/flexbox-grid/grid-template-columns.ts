@@ -25,5 +25,3 @@ export const createGridTemplateColumnsRules = ({ max = 12 }: GridTemplateColumns
     ],
     { label: "grid-template-columns", category: "flexbox-grid", tags: ["preset"] },
   );
-
-export const gridTemplateColumnsRules: Rule[] = createGridTemplateColumnsRules();

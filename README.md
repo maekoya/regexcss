@@ -116,7 +116,7 @@ Preset rules with numeric scales are capped so they stay enumerable (and out-of-
   options: {
     spacing: { max: 32 }, // default 96 (margin, padding)
     sizing: { max: 64 }, // default 96 (w, h, min-*, max-*, size)
-    layout: { zIndex: { max: 100 } }, // default 50
+    "layout/z-index": { max: 100 }, // default 50
   },
 }),
 ```
@@ -142,7 +142,7 @@ rules: [
 ],
 ```
 
-All names are typed (`TailwindPresetName` = categories + `category/page` paths derived from the page tables), so unknown names and mismatched options fail at compile time. Duplicates are deduped (first occurrence wins), and `exclude` always wins over `include`. The category/page tables are exposed as `tailwindPreset.categories`.
+All names are typed (`TailwindPresetName` = categories + `category/page` paths derived from the page tables), so unknown names and mismatched options fail at compile time. Duplicates are deduped (first occurrence wins), and `exclude` always wins over `include`. Category-level option keys exist only for the shared-scale categories (`sizing`, `spacing`); every other tunable page takes its options via the `category/page` key. The category/page tables are exposed as `tailwindPreset.categories`.
 
 ## Entry points
 

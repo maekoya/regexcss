@@ -1,18 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../src/core/rules.ts";
 import { backgroundColorRules } from "../src/preset/tailwind/color/background-color.ts";
 import { tailwindPreset } from "../src/preset/tailwind/index.ts";
-import type { RuleContext } from "../src/types.ts";
+import { match as matchIn } from "./preset-helpers.ts";
 
 const colorRules = tailwindPreset({ include: ["color"] });
 
-const ctx = (token: string): RuleContext => ({
-  rawSelector: token,
-  currentSelector: token,
-  variants: [],
-});
-
-const match = (token: string, rules = backgroundColorRules) => matchRule(token, rules, ctx(token))?.css;
+const match = (token: string, rules = backgroundColorRules) => matchIn(token, rules);
 
 describe("preset color background-color", () => {
   it.each([

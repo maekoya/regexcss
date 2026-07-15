@@ -37,5 +37,3 @@ export const createPaddingRules = ({ max = 96 }: PaddingOptions = {}): Rule[] =>
     ],
     { label: "padding", category: "spacing", tags: ["preset"] },
   );
-
-export const paddingRules: Rule[] = createPaddingRules();

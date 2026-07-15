@@ -1,27 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../src/core/rules.ts";
 import { tailwindPreset } from "../src/preset/tailwind/index.ts";
-import { heightRules } from "../src/preset/tailwind/sizing/height.ts";
-import { maxHeightRules } from "../src/preset/tailwind/sizing/max-height.ts";
-import { maxWidthRules } from "../src/preset/tailwind/sizing/max-width.ts";
-import { minHeightRules } from "../src/preset/tailwind/sizing/min-height.ts";
-import { minWidthRules } from "../src/preset/tailwind/sizing/min-width.ts";
-import { sizeRules } from "../src/preset/tailwind/sizing/size.ts";
-import { createWidthRules, widthRules } from "../src/preset/tailwind/sizing/width.ts";
-import type { CSSObject, Rule, RuleContext } from "../src/types.ts";
+import { createHeightRules } from "../src/preset/tailwind/sizing/height.ts";
+import type { SizingOptions } from "../src/preset/tailwind/sizing/index.ts";
+import { createMaxHeightRules } from "../src/preset/tailwind/sizing/max-height.ts";
+import { createMaxWidthRules } from "../src/preset/tailwind/sizing/max-width.ts";
+import { createMinHeightRules } from "../src/preset/tailwind/sizing/min-height.ts";
+import { createMinWidthRules } from "../src/preset/tailwind/sizing/min-width.ts";
+import { createSizeRules } from "../src/preset/tailwind/sizing/size.ts";
+import { createWidthRules } from "../src/preset/tailwind/sizing/width.ts";
+import { match } from "./preset-helpers.ts";
 
-// the category-wide cap now lives behind tailwindPreset's options
-const createSizingRules = (options?: { max?: number }) =>
+const heightRules = createHeightRules();
+const maxHeightRules = createMaxHeightRules();
+const maxWidthRules = createMaxWidthRules();
+const minHeightRules = createMinHeightRules();
+const minWidthRules = createMinWidthRules();
+const sizeRules = createSizeRules();
+const widthRules = createWidthRules();
+
+// the category-wide cap lives behind tailwindPreset's options
+const createSizingRules = (options?: SizingOptions) =>
   tailwindPreset({ include: ["sizing"], options: { sizing: options } });
-
-const ctx = (token: string): RuleContext => ({
-  rawSelector: token,
-  currentSelector: token,
-  variants: [],
-});
-
-const match = (token: string, rules: Rule[]): CSSObject | undefined =>
-  matchRule(token, rules, ctx(token))?.css as CSSObject | undefined;
 
 describe("preset sizing — width", () => {
   it.each([

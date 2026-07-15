@@ -1,9 +1,9 @@
-import type { PageOptionsOf, PageTable } from "../../shared/page-table.ts";
+import type { PageTable } from "../../shared/page-table.ts";
 import { fontFamilyRules } from "./font-family.ts";
 import { fontStyleRules } from "./font-style.ts";
 import { fontVariantNumericRules } from "./font-variant-numeric.ts";
 import { fontWeightRules } from "./font-weight.ts";
-import { createLineClampRules, type LineClampOptions } from "./line-clamp.ts";
+import { createLineClampRules } from "./line-clamp.ts";
 import { textAlignRules } from "./text-align.ts";
 import { textDecorationLineRules } from "./text-decoration-line.ts";
 import { textOverflowRules } from "./text-overflow.ts";
@@ -15,6 +15,8 @@ import { wordBreakRules } from "./word-break.ts";
 
 // ONE canonical page table. Key order = cascade order; keys are the page file
 // basenames and become the `typography/<slug>` names accepted by tailwindPreset.
+// Factory pages (line-clamp) are tuned via page-path options, e.g.
+// `options: { "typography/line-clamp": { max: 3 } }`.
 export const typographyPages = {
   "font-family": fontFamilyRules,
   "font-style": fontStyleRules,
@@ -30,12 +32,3 @@ export const typographyPages = {
   "white-space": whiteSpaceRules,
   "word-break": wordBreakRules,
 } satisfies PageTable;
-
-export interface TypographyOptions {
-  lineClamp?: LineClampOptions;
-}
-
-// Routes category options to page slugs; consumed by tailwindPreset.
-export const typographyPageOptions = (options: TypographyOptions = {}): PageOptionsOf<typeof typographyPages> => ({
-  "line-clamp": options.lineClamp,
-});

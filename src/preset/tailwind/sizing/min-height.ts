@@ -14,5 +14,3 @@ export const createMinHeightRules = ({ max }: MinHeightOptions = {}): Rule[] =>
     makeSizingRules("min-h", "min", { screen: "100vh", axis: "h", max }, (v) => ({ "min-height": v })),
     { label: "min-height", category: "sizing", tags: ["preset"] },
   );
-
-export const minHeightRules: Rule[] = createMinHeightRules();

@@ -14,5 +14,3 @@ export const createWidthRules = ({ max }: WidthOptions = {}): Rule[] =>
     makeSizingRules("w", "base", { screen: "100vw", axis: "w", container: true, max }, (v) => ({ width: v })),
     { label: "width", category: "sizing", tags: ["preset"] },
   );
-
-export const widthRules: Rule[] = createWidthRules();

@@ -1,9 +1,12 @@
+import { readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../src/core/rules.ts";
 import { tailwindPreset, type TailwindPresetName } from "../src/preset/tailwind/index.ts";
 import { typographyPages } from "../src/preset/tailwind/typography/index.ts";
-import { lineClampRules } from "../src/preset/tailwind/typography/line-clamp.ts";
-import type { Rule, RuleContext } from "../src/types.ts";
+import { createLineClampRules } from "../src/preset/tailwind/typography/line-clamp.ts";
+import type { Rule } from "../src/types.ts";
+import { match } from "./preset-helpers.ts";
+
+const lineClampRules = createLineClampRules();
 
 // per-category baselines, built through the public API
 const colorRules = tailwindPreset({ include: ["color"] });
@@ -12,14 +15,6 @@ const layoutRules = tailwindPreset({ include: ["layout"] });
 const sizingRules = tailwindPreset({ include: ["sizing"] });
 const spacingRules = tailwindPreset({ include: ["spacing"] });
 const typographyRules = tailwindPreset({ include: ["typography"] });
-
-const ctx = (token: string): RuleContext => ({
-  rawSelector: token,
-  currentSelector: token,
-  variants: [],
-});
-
-const match = (token: string, rules: Rule[]) => matchRule(token, rules, ctx(token))?.css;
 
 // Rule tuples contain handler closures, so factory output can't be compared by
 // reference; a regex-source + label signature pins both content and order.
@@ -46,10 +41,6 @@ describe("tailwindPreset selection", () => {
     expect(signature(tailwindPreset({ include: ["spacing", "typography"] }))).toEqual(
       signature([...spacingRules, ...typographyRules]),
     );
-  });
-
-  it("accepts the object form with include", () => {
-    expect(signature(tailwindPreset({ include: ["layout"] }))).toEqual(signature(layoutRules));
   });
 
   it("drops excluded categories from the default set", () => {
@@ -84,6 +75,17 @@ describe("tailwindPreset selection", () => {
     expect(() => tailwindPreset({ include: ["nonexistent"] })).toThrow('Unknown preset "nonexistent"');
     // @ts-expect-error -- spacing options have no `lineClamp` field
     tailwindPreset({ include: ["spacing"], options: { spacing: { lineClamp: { max: 3 } } } });
+    // @ts-expect-error -- typography has no category-level options; use "typography/line-clamp"
+    tailwindPreset({ include: ["typography"], options: { typography: { lineClamp: { max: 3 } } } });
+  });
+
+  it("rejects prototype member names like a plain unknown name", () => {
+    expect(() => tailwindPreset({ include: ["toString" as TailwindPresetName] })).toThrow(
+      'Unknown preset "toString" (tailwind)',
+    );
+    expect(() => tailwindPreset({ include: ["constructor/foo" as TailwindPresetName] })).toThrow(
+      'Unknown preset page "constructor/foo" (tailwind)',
+    );
   });
 });
 
@@ -147,6 +149,21 @@ describe("tailwindPreset page-level selection", () => {
     );
   });
 
+  it("validates exclude names too — a typo'd exclusion throws instead of silently no-opping", () => {
+    expect(() =>
+      tailwindPreset({ include: ["spacing"], exclude: ["spacing/margins" as TailwindPresetName] }),
+    ).toThrow('Unknown preset page "spacing/margins" (tailwind)');
+  });
+
+  it("ignores explicitly-undefined page option values instead of clobbering category options", () => {
+    const rules = tailwindPreset({
+      include: ["sizing"],
+      options: { sizing: { max: 4 }, "sizing/width": { max: undefined } },
+    });
+    expect(match("w-4", rules)).toBeDefined();
+    expect(match("w-8", rules)).toBeUndefined(); // category cap of 4 survives the undefined override
+  });
+
   it("rejects the retired array shorthand at runtime (plain-JS guard)", () => {
     // @ts-expect-error -- selections are objects, not arrays
     expect(() => tailwindPreset(["spacing"])).toThrow("use { include: [...] }");
@@ -154,14 +171,20 @@ describe("tailwindPreset page-level selection", () => {
 });
 
 describe("tailwindPreset.categories", () => {
-  it("exposes pages and an option router per category; selections return fresh rule sets", () => {
+  it("exposes pages per category; selections return fresh rule sets", () => {
     for (const [category, entry] of Object.entries(tailwindPreset.categories)) {
       expect(Object.keys(entry.pages).length).toBeGreaterThan(0);
-      expect(typeof entry.pageOptions).toBe("function");
       const rules = tailwindPreset({ include: [category as TailwindPresetName] });
       expect(rules.length).toBeGreaterThan(0);
       expect(rules).not.toBe(tailwindPreset({ include: [category as TailwindPresetName] }));
     }
+  });
+
+  it("only the shared-max categories carry an option router", () => {
+    const routed = Object.entries(tailwindPreset.categories)
+      .filter(([, entry]) => "pageOptions" in entry)
+      .map(([category]) => category);
+    expect(routed).toEqual(["sizing", "spacing"]);
   });
 
   it("page tables use page file basenames as slugs", () => {
@@ -175,5 +198,15 @@ describe("tailwindPreset.categories", () => {
       "max-height",
       "size",
     ]);
+  });
+
+  it("every page-table slug equals its page file basename (by construction on disk)", () => {
+    for (const [category, entry] of Object.entries(tailwindPreset.categories)) {
+      const files = readdirSync(new URL(`../src/preset/tailwind/${category}/`, import.meta.url))
+        .filter((file) => file.endsWith(".ts") && file !== "index.ts" && !file.startsWith("_"))
+        .map((file) => file.replace(/\.ts$/, ""))
+        .sort();
+      expect(Object.keys(entry.pages).sort(), category).toEqual(files);
+    }
   });
 });

@@ -1,30 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../src/core/rules.ts";
 import { alignContentRules } from "../src/preset/tailwind/flexbox-grid/align-content.ts";
 import { alignItemsRules } from "../src/preset/tailwind/flexbox-grid/align-items.ts";
 import { alignSelfRules } from "../src/preset/tailwind/flexbox-grid/align-self.ts";
 import { flexDirectionRules } from "../src/preset/tailwind/flexbox-grid/flex-direction.ts";
 import { flexWrapRules } from "../src/preset/tailwind/flexbox-grid/flex-wrap.ts";
-import { gapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
+import { createGapRules } from "../src/preset/tailwind/flexbox-grid/gap.ts";
 import { gridAutoColumnsRules } from "../src/preset/tailwind/flexbox-grid/grid-auto-columns.ts";
 import { gridAutoFlowRules } from "../src/preset/tailwind/flexbox-grid/grid-auto-flow.ts";
 import { gridAutoRowsRules } from "../src/preset/tailwind/flexbox-grid/grid-auto-rows.ts";
-import { gridRowRules } from "../src/preset/tailwind/flexbox-grid/grid-row.ts";
-import { gridTemplateColumnsRules } from "../src/preset/tailwind/flexbox-grid/grid-template-columns.ts";
-import { gridTemplateRowsRules } from "../src/preset/tailwind/flexbox-grid/grid-template-rows.ts";
+import { createGridRowRules } from "../src/preset/tailwind/flexbox-grid/grid-row.ts";
+import { createGridTemplateColumnsRules } from "../src/preset/tailwind/flexbox-grid/grid-template-columns.ts";
+import { createGridTemplateRowsRules } from "../src/preset/tailwind/flexbox-grid/grid-template-rows.ts";
 import { justifyContentRules } from "../src/preset/tailwind/flexbox-grid/justify-content.ts";
 import { justifyItemsRules } from "../src/preset/tailwind/flexbox-grid/justify-items.ts";
 import { justifySelfRules } from "../src/preset/tailwind/flexbox-grid/justify-self.ts";
-import { createOrderRules, orderRules } from "../src/preset/tailwind/flexbox-grid/order.ts";
-import type { Rule, RuleContext } from "../src/types.ts";
+import { createOrderRules } from "../src/preset/tailwind/flexbox-grid/order.ts";
 
-const ctx = (token: string): RuleContext => ({
-  rawSelector: token,
-  currentSelector: token,
-  variants: [],
-});
-
-const match = (token: string, rules: Rule[]) => matchRule(token, rules, ctx(token))?.css;
+const gapRules = createGapRules();
+const gridRowRules = createGridRowRules();
+const gridTemplateColumnsRules = createGridTemplateColumnsRules();
+const gridTemplateRowsRules = createGridTemplateRowsRules();
+const orderRules = createOrderRules();
+import { match } from "./preset-helpers.ts";
 
 describe("align-content", () => {
   it.each([

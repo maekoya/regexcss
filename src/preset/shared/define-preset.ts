@@ -2,22 +2,25 @@ import type { Rule } from "../../types.ts";
 import type { PageOptionsOf, PageTable } from "./page-table.ts";
 
 /**
- * One preset category: an ordered page table plus a router that derives
- * per-page option bags from the category's own options. The `never` parameter
- * makes any concrete `(options?: XOptions) => ...` router assignable under
- * strict contravariance (same trick as `Page`); the loose `object` return
- * keeps `PageOptionsOf<...>` return shapes assignable without demanding an
- * index signature. Each category pairs `pages` with `pageOptions` via its own
- * explicit return annotation (`PageOptionsOf<typeof xPages>`).
+ * One preset category: an ordered page table, plus — only for categories with
+ * a genuinely shared knob (e.g. sizing's `max`) — a router that derives
+ * per-page option bags from the category's own options. Categories without a
+ * router take no category-level options; their factory pages are tuned via
+ * `"category/page"` option keys instead. The `never` parameter makes any
+ * concrete `(options?: XOptions) => ...` router assignable under strict
+ * contravariance (same trick as `Page`); the loose `object` return keeps
+ * `PageOptionsOf<...>` return shapes assignable without demanding an index
+ * signature.
  */
 export interface PresetCategory {
   pages: PageTable;
-  pageOptions: (options?: never) => object;
+  pageOptions?: (options?: never) => object;
 }
 
 /**
  * Category-name → category map. Key order = canonical rule order. Category
- * names and page slugs must not contain `/` — paths split on the first slash.
+ * names and page slugs must not contain `/` — paths split on the first slash
+ * (validated by `definePreset`).
  */
 export type PresetCategories = Record<string, PresetCategory>;
 
@@ -38,9 +41,15 @@ type PathOptions<C extends PresetCategories, P> = P extends `${infer K}/${infer 
     : never
   : never;
 
-/** Options keyed by category (routed per page) or by page path (overrides the derived bag). */
+/** The category-level options of one category (`never` when it has no router). */
+type CategoryOptions<Cat> = Cat extends { pageOptions: (options?: infer O) => object } ? O : never;
+
+/**
+ * Options keyed by category (only categories with a router) or by page path
+ * (overrides the derived bag key-by-key).
+ */
 type OptionsMap<C extends PresetCategories> = {
-  [K in keyof C]?: Parameters<C[K]["pageOptions"]>[0];
+  [K in keyof C as [CategoryOptions<C[K]>] extends [never] ? never : K]?: CategoryOptions<C[K]>;
 } & {
   [P in PagePath<C>]?: PathOptions<C, P>;
 };
@@ -71,8 +80,6 @@ interface AnyPreset {
   categories: PresetCategories;
 }
 
-/** The category map of a preset, e.g. `PresetCategoriesOf<typeof tailwindPreset>`. */
-export type PresetCategoriesOf<P extends AnyPreset> = P["categories"];
 /** Name union of a preset: categories plus `category/page` paths. */
 export type PresetNameOf<P extends AnyPreset> = Name<P["categories"]>;
 /** The object-form selection accepted by a preset. */
@@ -90,10 +97,25 @@ export function definePreset<C extends PresetCategories>(categories: C, name?: s
   const table: PresetCategories = categories;
   const suffix = name === undefined ? "" : ` (${name})`;
 
-  // Expand a name to its page paths (a category expands to all of its pages, in table order).
+  for (const category of Object.keys(table)) {
+    if (category.includes("/")) {
+      throw new Error(`Preset category name "${category}" must not contain "/"${suffix}`);
+    }
+  }
+
+  // Expand a name to its page paths (a category expands to all of its pages,
+  // in table order). Every name — include and exclude alike — is validated
+  // here, with own-key lookups so prototype members ("toString", ...) are
+  // rejected like any other unknown name.
   const pagePaths = (n: string): string[] => {
-    if (n in table) return Object.keys(table[n].pages).map((slug) => `${n}/${slug}`);
-    if (!n.includes("/")) throw new Error(`Unknown preset "${n}"${suffix}`);
+    if (Object.hasOwn(table, n)) return Object.keys(table[n].pages).map((slug) => `${n}/${slug}`);
+    const slash = n.indexOf("/");
+    if (slash === -1) throw new Error(`Unknown preset "${n}"${suffix}`);
+    const category = n.slice(0, slash);
+    const slug = n.slice(slash + 1);
+    if (!Object.hasOwn(table, category) || !Object.hasOwn(table[category].pages, slug)) {
+      throw new Error(`Unknown preset page "${n}"${suffix}`);
+    }
     return [n];
   };
 
@@ -111,21 +133,40 @@ export function definePreset<C extends PresetCategories>(categories: C, name?: s
       seen.add(path);
       return true;
     });
-    const options = (sel.options ?? {}) as Record<string, object | undefined>;
+    const options = (sel.options ?? {}) as Record<string, Record<string, unknown> | undefined>;
+    // Route category options to pages once per category, not once per page.
+    const derivedByCategory = new Map<string, Record<string, object | undefined>>();
+    const derivedFor = (category: string): Record<string, object | undefined> => {
+      let bag = derivedByCategory.get(category);
+      if (bag === undefined) {
+        const route = table[category].pageOptions as
+          | ((o?: object) => Record<string, object | undefined>)
+          | undefined;
+        bag = route?.(options[category]) ?? {};
+        derivedByCategory.set(category, bag);
+      }
+      return bag;
+    };
     return paths.flatMap((path) => {
       const slash = path.indexOf("/");
       const category = path.slice(0, slash);
       const slug = path.slice(slash + 1);
-      const page = table[category]?.pages[slug];
-      if (page === undefined) throw new Error(`Unknown preset page "${path}"${suffix}`);
+      const page = table[category].pages[slug]; // validated by pagePaths
       if (typeof page !== "function") return page;
-      // Category options routed to this page by the category's deriver, then
-      // page-path options shallow-merged on top (page keys win). Each value is
-      // type-checked by the options map; the casts bridge the entry union.
-      const derived = (table[category].pageOptions as (o?: object) => Record<string, object | undefined>)(
-        options[category],
-      )[slug];
-      return page({ ...derived, ...options[path] } as never);
+      // Page-path options override the derived category bag key-by-key.
+      // Explicit `undefined` values are skipped so `{ max: cond ? 32 : undefined }`
+      // cannot clobber a category option back to the factory default.
+      const derived = derivedFor(category)[slug];
+      const overrides = options[path];
+      let bag = derived;
+      if (overrides !== undefined) {
+        const merged: Record<string, unknown> = { ...derived };
+        for (const [key, value] of Object.entries(overrides)) {
+          if (value !== undefined) merged[key] = value;
+        }
+        bag = merged;
+      }
+      return page(bag as never);
     });
   };
 

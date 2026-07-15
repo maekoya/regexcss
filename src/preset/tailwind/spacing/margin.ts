@@ -53,5 +53,3 @@ export const createMarginRules = ({ max = 96 }: MarginOptions = {}): Rule[] =>
     ],
     { label: "margin", category: "spacing", tags: ["preset"] },
   );
-
-export const marginRules: Rule[] = createMarginRules();

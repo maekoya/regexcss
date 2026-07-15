@@ -32,5 +32,3 @@ export const createGapRules = ({ max = 96 }: GapOptions = {}): Rule[] =>
     ],
     { label: "gap", category: "flexbox-grid", tags: ["preset"] },
   );
-
-export const gapRules: Rule[] = createGapRules();

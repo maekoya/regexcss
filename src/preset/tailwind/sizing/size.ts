@@ -15,5 +15,3 @@ export const createSizeRules = ({ max }: SizeOptions = {}): Rule[] =>
     makeSizingRules("size", "base", { axis: "w", container: true, max }, (v) => ({ width: v, height: v })),
     { label: "size", category: "sizing", tags: ["preset"] },
   );
-
-export const sizeRules: Rule[] = createSizeRules();

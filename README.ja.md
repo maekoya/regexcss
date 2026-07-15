@@ -114,7 +114,7 @@ rules: [
   options: {
     spacing: { max: 32 }, // デフォルト 96（margin、padding）
     sizing: { max: 64 }, // デフォルト 96（w、h、min-*、max-*、size）
-    layout: { zIndex: { max: 100 } }, // デフォルト 50
+    "layout/z-index": { max: 100 }, // デフォルト 50
   },
 }),
 ```
@@ -140,7 +140,7 @@ rules: [
 ],
 ```
 
-名前はすべて型付き（`TailwindPresetName` = カテゴリ + ページテーブル由来の `category/page` パス）なので、存在しない名前やオプションの取り違えはコンパイル時に検出されます。重複は初出優先で除去され、`exclude` は常に `include` より優先されます。カテゴリ／ページのテーブルは `tailwindPreset.categories` として参照できます。
+名前はすべて型付き（`TailwindPresetName` = カテゴリ + ページテーブル由来の `category/page` パス）なので、存在しない名前やオプションの取り違えはコンパイル時に検出されます。重複は初出優先で除去され、`exclude` は常に `include` より優先されます。カテゴリ単位のオプションキーは共有スケールを持つカテゴリ（`sizing`、`spacing`）だけで、それ以外の調整可能ページは `category/page` キーでオプションを受け取ります。カテゴリ／ページのテーブルは `tailwindPreset.categories` として参照できます。
 
 ## エントリーポイント
 
