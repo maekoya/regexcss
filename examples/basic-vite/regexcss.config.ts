@@ -9,7 +9,12 @@ export default defineConfig({
     ...tailwindPreset({
       include: ["spacing", "layout", "typography", "flexbox-grid", "sizing"],
       options: {
-        "typography/font-family": { sans: "var(--font-sans)", serif: "var(--font-serif)", mono: "var(--font-mono)" },
+        "typography/font-family": {
+          sans: "var(--font-sans)",
+          serif: "var(--font-serif)",
+          mono: "var(--font-mono)",
+          notoSans: "var(--font-noto-sans)",
+        },
         sizing: { excludeContainerClasses: true },
         spacing: { excludeNegativeClasses: true },
       },

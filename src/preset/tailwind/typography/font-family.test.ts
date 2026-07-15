@@ -41,4 +41,26 @@ describe("font-family", () => {
     });
     expect(match("font-sans", rules)).toEqual({ "font-family": "system-ui" });
   });
+
+  it("grows new classes from custom keys, keeping the defaults", () => {
+    const rules = createFontFamilyRules({ "sans-noto": '"Noto Sans JP", sans-serif' });
+    expect(match("font-sans-noto", rules)).toEqual({ "font-family": '"Noto Sans JP", sans-serif' });
+    // the longer key must not shadow (or be shadowed by) the built-in "sans"
+    expect(match("font-sans", rules)).toEqual({
+      "font-family":
+        'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    });
+    expect(match("font-sans-notox", rules)).toBeUndefined();
+  });
+
+  it("accepts custom keys through tailwindPreset utility-path options", () => {
+    const rules = tailwindPreset({
+      include: ["typography/font-family"],
+      options: { "typography/font-family": { "sans-noto": '"Noto Sans JP", sans-serif' } },
+    });
+    expect(match("font-sans-noto", rules)).toEqual({ "font-family": '"Noto Sans JP", sans-serif' });
+    expect(match("font-serif", rules)).toEqual({
+      "font-family": 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+    });
+  });
 });
