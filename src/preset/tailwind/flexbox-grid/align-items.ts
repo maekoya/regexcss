@@ -12,5 +12,5 @@ const ALIGN_ITEMS: Record<string, string> = {
 
 export const alignItemsRules: Rule[] = withMeta(
   [[/^items-(start|end|center|baseline|stretch)$/, ([, k]) => ({ "align-items": ALIGN_ITEMS[k ?? ""] ?? "" })]],
-  { label: "align-items", category: "flexbox-grid", tags: ["preset"] },
+  { label: "align-items", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

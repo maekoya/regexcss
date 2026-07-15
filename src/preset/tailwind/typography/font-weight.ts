@@ -21,5 +21,5 @@ export const fontWeightRules: Rule[] = withMeta(
       ([, k]) => ({ "font-weight": FONT_WEIGHT[k ?? ""] ?? "" }),
     ],
   ],
-  { label: "font-weight", category: "typography", tags: ["preset"] },
+  { label: "font-weight", category: "typography", tags: ["preset", "tailwind"] },
 );

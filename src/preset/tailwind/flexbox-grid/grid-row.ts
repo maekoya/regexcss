@@ -44,5 +44,5 @@ export const createGridRowRules = ({ max = 12 }: GridRowOptions = {}): Rule[] =>
         },
       ],
     ],
-    { label: "grid-row", category: "flexbox-grid", tags: ["preset"] },
+    { label: "grid-row", category: "flexbox-grid", tags: ["preset", "tailwind"] },
   );

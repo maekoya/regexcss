@@ -1,5 +1,5 @@
 import type { UtilityTable } from "../../shared/utility-table.ts";
-import { fontFamilyRules } from "./font-family.ts";
+import { createFontFamilyRules } from "./font-family.ts";
 import { fontStyleRules } from "./font-style.ts";
 import { fontVariantNumericRules } from "./font-variant-numeric.ts";
 import { fontWeightRules } from "./font-weight.ts";
@@ -15,10 +15,10 @@ import { wordBreakRules } from "./word-break.ts";
 
 // ONE canonical utility table. Key order = cascade order; keys are the utility file
 // basenames and become the `typography/<slug>` names accepted by tailwindPreset.
-// Factory utilities (line-clamp) are tuned via utility-path options, e.g.
-// `options: { "typography/line-clamp": { max: 3 } }`.
+// Factory utilities (font-family, line-clamp) are tuned via utility-path options,
+// e.g. `options: { "typography/line-clamp": { max: 3 } }`.
 export const typographyUtilities = {
-  "font-family": fontFamilyRules,
+  "font-family": createFontFamilyRules,
   "font-style": fontStyleRules,
   "font-variant-numeric": fontVariantNumericRules,
   "font-weight": fontWeightRules,

@@ -21,5 +21,5 @@ export const alignContentRules: Rule[] = withMeta(
       ([, k]) => ({ "align-content": ALIGN_CONTENT[k ?? ""] ?? "" }),
     ],
   ],
-  { label: "align-content", category: "flexbox-grid", tags: ["preset"] },
+  { label: "align-content", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

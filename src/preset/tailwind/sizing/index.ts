@@ -22,6 +22,19 @@ export const sizingUtilities = {
 export interface SizingOptions {
   /** Largest value the numeric scale accepts, inclusive (default 96). Applies to every axis. */
   max?: number;
+  /**
+   * CSS variable prefix for the container-scale tokens (`w-3xs` →
+   * `var(--<baseContainerTokenPrefix>-3xs)`, default "container"). Applies to the axes
+   * that have the container scale (`w`, `max-w`, `size`).
+   */
+  baseContainerTokenPrefix?: string;
+  /**
+   * Drop the container-scale token rules entirely (`w-3xs` ... `w-7xl`,
+   * `max-w-*`, `size-*` token keywords stop matching). Wins over
+   * `baseContainerTokenPrefix`; override per axis via utility-path options
+   * (e.g. `"sizing/width": { excludeContainerClasses: false }`). Default false.
+   */
+  excludeContainerClasses?: boolean;
 }
 
 // One shared options bag for every utility (SizingOptions is structurally each utility's own options).

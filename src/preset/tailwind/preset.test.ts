@@ -1,10 +1,10 @@
 import { readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { tailwindPreset, type TailwindPresetName } from "../src/preset/tailwind/index.ts";
-import { typographyUtilities } from "../src/preset/tailwind/typography/index.ts";
-import { createLineClampRules } from "../src/preset/tailwind/typography/line-clamp.ts";
-import type { Rule } from "../src/types.ts";
-import { match } from "./preset-helpers.ts";
+import type { Rule } from "../../types.ts";
+import { match } from "../test-helpers.ts";
+import { tailwindPreset, type TailwindPresetName } from "./index.ts";
+import { typographyUtilities } from "./typography/index.ts";
+import { createLineClampRules } from "./typography/line-clamp.ts";
 
 const lineClampRules = createLineClampRules();
 
@@ -202,8 +202,10 @@ describe("tailwindPreset.categories", () => {
 
   it("every utility-table slug equals its utility file basename (by construction on disk)", () => {
     for (const [category, entry] of Object.entries(tailwindPreset.categories)) {
-      const files = readdirSync(new URL(`../src/preset/tailwind/${category}/`, import.meta.url))
-        .filter((file) => file.endsWith(".ts") && file !== "index.ts" && !file.startsWith("_"))
+      const files = readdirSync(new URL(`./${category}/`, import.meta.url))
+        .filter(
+          (file) => file.endsWith(".ts") && !file.endsWith(".test.ts") && file !== "index.ts" && !file.startsWith("_"),
+        )
         .map((file) => file.replace(/\.ts$/, ""))
         .sort();
       expect(Object.keys(entry.utilities).sort(), category).toEqual(files);

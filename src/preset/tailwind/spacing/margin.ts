@@ -20,36 +20,39 @@ const numericSamples = (sign: "" | "-") => scaleSamples(props, (key) => `${sign}
 export interface MarginOptions {
   /** Largest value the numeric scale accepts, inclusive (default 96). Out-of-range values match no rule. */
   max?: number;
+  /** Drop the negative-margin rules entirely (`-m-2`, `-mx-4`, ... stop matching). Default false. */
+  excludeNegativeClasses?: boolean;
 }
 
-// margin utilities. supports positive (m-1), negative (-m-1), and auto (m-auto).
-export const createMarginRules = ({ max = 96 }: MarginOptions = {}): Rule[] =>
-  withMeta(
+// margin utilities. supports positive (m-1), negative (-m-1, optional), and auto (m-auto).
+export const createMarginRules = ({ max = 96, excludeNegativeClasses }: MarginOptions = {}): Rule[] => {
+  const rules: Rule[] = [
     [
-      [
-        /^(m[xylrtb]?)-(\d+(?:\.\d+)?|\.\d+)$/,
-        ([, key, num]) => {
-          const prop = props[key ?? ""];
-          return prop && num && Number(num) <= max ? { [prop]: rem(num) } : undefined;
-        },
-        { samples: numericSamples("") },
-      ],
-      [
-        /^-(m[xylrtb]?)-(\d+(?:\.\d+)?|\.\d+)$/,
-        ([, key, num]) => {
-          const prop = props[key ?? ""];
-          return prop && num && Number(num) <= max ? { [prop]: `-${rem(num)}` } : undefined;
-        },
-        { samples: numericSamples("-") },
-      ],
-      // m-auto, mx-auto, ... are finite; docs enumerate them straight from the regex.
-      [
-        /^(m[xylrtb]?)-auto$/,
-        ([, key]) => {
-          const prop = props[key ?? ""];
-          return prop ? { [prop]: "auto" } : undefined;
-        },
-      ],
+      /^(m[xylrtb]?)-(\d+(?:\.\d+)?|\.\d+)$/,
+      ([, key, num]) => {
+        const prop = props[key ?? ""];
+        return prop && num && Number(num) <= max ? { [prop]: rem(num) } : undefined;
+      },
+      { samples: numericSamples("") },
     ],
-    { label: "margin", category: "spacing", tags: ["preset"] },
-  );
+  ];
+  if (!excludeNegativeClasses) {
+    rules.push([
+      /^-(m[xylrtb]?)-(\d+(?:\.\d+)?|\.\d+)$/,
+      ([, key, num]) => {
+        const prop = props[key ?? ""];
+        return prop && num && Number(num) <= max ? { [prop]: `-${rem(num)}` } : undefined;
+      },
+      { samples: numericSamples("-") },
+    ]);
+  }
+  // m-auto, mx-auto, ... are finite; docs enumerate them straight from the regex.
+  rules.push([
+    /^(m[xylrtb]?)-auto$/,
+    ([, key]) => {
+      const prop = props[key ?? ""];
+      return prop ? { [prop]: "auto" } : undefined;
+    },
+  ]);
+  return withMeta(rules, { label: "margin", category: "spacing", tags: ["preset", "tailwind"] });
+};

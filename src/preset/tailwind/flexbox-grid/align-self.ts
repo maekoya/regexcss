@@ -13,5 +13,5 @@ const ALIGN_SELF: Record<string, string> = {
 
 export const alignSelfRules: Rule[] = withMeta(
   [[/^self-(auto|start|end|center|stretch|baseline)$/, ([, k]) => ({ "align-self": ALIGN_SELF[k ?? ""] ?? "" })]],
-  { label: "align-self", category: "flexbox-grid", tags: ["preset"] },
+  { label: "align-self", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

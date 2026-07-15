@@ -23,5 +23,5 @@ export const createGridTemplateRowsRules = ({ max = 12 }: GridTemplateRowsOption
         { samples: [{ class: "grid-rows-<num>", style: "grid-template-rows: repeat(<num>, minmax(0, 1fr));" }] },
       ],
     ],
-    { label: "grid-template-rows", category: "flexbox-grid", tags: ["preset"] },
+    { label: "grid-template-rows", category: "flexbox-grid", tags: ["preset", "tailwind"] },
   );

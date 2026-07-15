@@ -6,5 +6,5 @@ import { withMeta } from "../../shared/with-meta.ts";
 // it wins over the `wrap` alternative.
 export const flexWrapRules: Rule[] = withMeta(
   [[/^flex-(wrap-reverse|wrap|nowrap)$/, ([, v]) => ({ "flex-wrap": v ?? "" })]],
-  { label: "flex-wrap", category: "flexbox-grid", tags: ["preset"] },
+  { label: "flex-wrap", category: "flexbox-grid", tags: ["preset", "tailwind"] },
 );

@@ -18,5 +18,5 @@ export const overscrollRules: Rule[] = withMeta(
       },
     ],
   ],
-  { label: "overscroll-behavior", category: "layout", tags: ["preset"] },
+  { label: "overscroll-behavior", category: "layout", tags: ["preset", "tailwind"] },
 );

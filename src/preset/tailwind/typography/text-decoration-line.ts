@@ -16,5 +16,5 @@ export const textDecorationLineRules: Rule[] = withMeta(
       ([, k]) => ({ "text-decoration-line": VALUES[k ?? ""] ?? "" }),
     ],
   ],
-  { label: "text-decoration-line", category: "typography", tags: ["preset"] },
+  { label: "text-decoration-line", category: "typography", tags: ["preset", "tailwind"] },
 );

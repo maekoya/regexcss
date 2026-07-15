@@ -23,5 +23,5 @@ export const fontVariantNumericRules: Rule[] = withMeta(
       ([, k]) => ({ "font-variant-numeric": VALUES[k ?? ""] ?? "" }),
     ],
   ],
-  { label: "font-variant-numeric", category: "typography", tags: ["preset"] },
+  { label: "font-variant-numeric", category: "typography", tags: ["preset", "tailwind"] },
 );

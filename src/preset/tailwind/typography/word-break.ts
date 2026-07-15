@@ -10,5 +10,5 @@ const WORD_BREAK: Record<string, string> = {
 
 export const wordBreakRules: Rule[] = withMeta(
   [[/^break-(normal|all|keep)$/, ([, k]) => ({ "word-break": WORD_BREAK[k ?? ""] ?? "" })]],
-  { label: "word-break", category: "typography", tags: ["preset"] },
+  { label: "word-break", category: "typography", tags: ["preset", "tailwind"] },
 );

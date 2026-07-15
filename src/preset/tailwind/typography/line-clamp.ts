@@ -41,5 +41,5 @@ export const createLineClampRules = ({ max = 6 }: LineClampOptions = {}): Rule[]
         }),
       ],
     ],
-    { label: "line-clamp", category: "typography", tags: ["preset"] },
+    { label: "line-clamp", category: "typography", tags: ["preset", "tailwind"] },
   );

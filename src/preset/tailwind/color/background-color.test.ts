@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { backgroundColorRules } from "../src/preset/tailwind/color/background-color.ts";
-import { tailwindPreset } from "../src/preset/tailwind/index.ts";
-import { match as matchIn } from "./preset-helpers.ts";
-
-const colorRules = tailwindPreset({ include: ["color"] });
+import { match as matchIn } from "../../test-helpers.ts";
+import { backgroundColorRules } from "./background-color.ts";
 
 const match = (token: string, rules = backgroundColorRules) => matchIn(token, rules);
 
@@ -34,10 +31,5 @@ describe("preset color background-color", () => {
     "text-red", // different utility
   ])("does not match %j", (token) => {
     expect(match(token)).toBeUndefined();
-  });
-
-  it("is included in the color category selection", () => {
-    expect(match("bg-blue", colorRules)).toEqual({ backgroundColor: "blue" });
-    expect(match("bg-", colorRules)).toBeUndefined();
   });
 });

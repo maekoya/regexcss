@@ -18,5 +18,5 @@ export const overflowRules: Rule[] = withMeta(
       },
     ],
   ],
-  { label: "overflow", category: "layout", tags: ["preset"] },
+  { label: "overflow", category: "layout", tags: ["preset", "tailwind"] },
 );

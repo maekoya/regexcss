@@ -30,5 +30,5 @@ export const createGapRules = ({ max = 96 }: GapOptions = {}): Rule[] =>
         { samples: numericSamples },
       ],
     ],
-    { label: "gap", category: "flexbox-grid", tags: ["preset"] },
+    { label: "gap", category: "flexbox-grid", tags: ["preset", "tailwind"] },
   );

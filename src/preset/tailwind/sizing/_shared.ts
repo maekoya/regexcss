@@ -13,8 +13,9 @@ const NUM = "(\\d+(?:\\.\\d+)?|\\.\\d+)";
 // viewport keyword units shared by every axis (w-dvw, h-svh, ...)
 const VIEWPORT = ["dvw", "dvh", "lvw", "lvh", "svw", "svh"];
 
-// container scale (w-3xs ... w-7xl) → var(--container-<size>). CSS variable names
-// mirror Tailwind's theme tokens; the consumer defines the actual values.
+// container scale (w-3xs ... w-7xl) → var(--<prefix>-<size>). The token names
+// mirror Tailwind's theme tokens by default ("container"); the prefix is
+// configurable per utility and the consumer defines the actual values.
 const CONTAINER = ["3xs", "2xs", "xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl"];
 
 // fractions accept numerator < denominator with denominators up to this bound
@@ -28,8 +29,8 @@ interface Options {
   screen?: string;
   /** "w" omits the `lh` keyword, "h" adds it (h-lh → 1lh). */
   axis: "w" | "h";
-  /** add the container scale (w-3xs ... w-7xl → var(--container-*)). */
-  container?: boolean;
+  /** enable the container scale with this CSS variable prefix (w-3xs ... w-7xl → var(--<prefix>-*)). */
+  container?: string;
   /** largest value the numeric scale accepts, inclusive (default 96). Out-of-range values match no rule. */
   max?: number;
 }
@@ -49,7 +50,7 @@ const keywords = (kind: Kind, { screen, axis, container }: Options): Record<stri
   else kw.auto = "auto";
   if (axis === "h") kw.lh = "1lh";
   for (const u of VIEWPORT) kw[u] = `100${u}`;
-  if (container) for (const c of CONTAINER) kw[c] = `var(--container-${c})`;
+  if (container) for (const c of CONTAINER) kw[c] = `var(--${container}-${c})`;
   return kw;
 };
 

@@ -24,5 +24,5 @@ export const createZIndexRules = ({ max = 10 }: ZIndexOptions = {}): Rule[] =>
         },
       ],
     ],
-    { label: "z-index", category: "layout", tags: ["preset"] },
+    { label: "z-index", category: "layout", tags: ["preset", "tailwind"] },
   );

@@ -8,10 +8,19 @@ import { makeSizingRules } from "./_shared.ts";
 export interface SizeOptions {
   /** Largest value the numeric scale accepts, inclusive (default 96). */
   max?: number;
+  /** CSS variable prefix for the container-scale tokens (`size-3xs` → `var(--<baseContainerTokenPrefix>-3xs)`, default "container"). */
+  baseContainerTokenPrefix?: string;
+  /** Drop the container-scale token rules entirely (`size-3xs` ... `size-7xl` stop matching). Wins over `baseContainerTokenPrefix`. Default false. */
+  excludeContainerClasses?: boolean;
 }
 
-export const createSizeRules = ({ max }: SizeOptions = {}): Rule[] =>
+export const createSizeRules = ({ max, baseContainerTokenPrefix, excludeContainerClasses }: SizeOptions = {}): Rule[] =>
   withMeta(
-    makeSizingRules("size", "base", { axis: "w", container: true, max }, (v) => ({ width: v, height: v })),
-    { label: "size", category: "sizing", tags: ["preset"] },
+    makeSizingRules(
+      "size",
+      "base",
+      { axis: "w", container: excludeContainerClasses ? undefined : (baseContainerTokenPrefix ?? "container"), max },
+      (v) => ({ width: v, height: v }),
+    ),
+    { label: "size", category: "sizing", tags: ["preset", "tailwind"] },
   );
