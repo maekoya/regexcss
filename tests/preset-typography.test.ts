@@ -1,30 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../src/core/rules.ts";
-import {
-  createLineClampRules,
-  fontFamilyRules,
-  fontStyleRules,
-  fontVariantNumericRules,
-  fontWeightRules,
-  lineClampRules,
-  textAlignRules,
-  textDecorationLineRules,
-  textOverflowRules,
-  textTransformRules,
-  textWrapRules,
-  verticalAlignRules,
-  whiteSpaceRules,
-  wordBreakRules,
-} from "../src/preset/index.ts";
-import type { Rule, RuleContext } from "../src/types.ts";
+import { fontFamilyRules } from "../src/preset/tailwind/typography/font-family.ts";
+import { fontStyleRules } from "../src/preset/tailwind/typography/font-style.ts";
+import { fontVariantNumericRules } from "../src/preset/tailwind/typography/font-variant-numeric.ts";
+import { fontWeightRules } from "../src/preset/tailwind/typography/font-weight.ts";
+import { createLineClampRules } from "../src/preset/tailwind/typography/line-clamp.ts";
+import { textAlignRules } from "../src/preset/tailwind/typography/text-align.ts";
+import { textDecorationLineRules } from "../src/preset/tailwind/typography/text-decoration-line.ts";
+import { textOverflowRules } from "../src/preset/tailwind/typography/text-overflow.ts";
+import { textTransformRules } from "../src/preset/tailwind/typography/text-transform.ts";
+import { textWrapRules } from "../src/preset/tailwind/typography/text-wrap.ts";
+import { verticalAlignRules } from "../src/preset/tailwind/typography/vertical-align.ts";
+import { whiteSpaceRules } from "../src/preset/tailwind/typography/white-space.ts";
+import { wordBreakRules } from "../src/preset/tailwind/typography/word-break.ts";
+import { match } from "./preset-helpers.ts";
 
-const ctx = (token: string): RuleContext => ({
-  rawSelector: token,
-  currentSelector: token,
-  variants: [],
-});
-
-const match = (token: string, rules: Rule[]) => matchRule(token, rules, ctx(token))?.css;
+const lineClampRules = createLineClampRules();
 
 describe("font-family", () => {
   it("maps the three stacks", () => {

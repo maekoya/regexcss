@@ -1,24 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../src/core/rules.ts";
-import {
-  createZIndexRules,
-  displayRules,
-  objectFitRules,
-  objectPositionRules,
-  overflowRules,
-  overscrollRules,
-  positionRules,
-  zIndexRules,
-} from "../src/preset/index.ts";
-import type { Rule, RuleContext } from "../src/types.ts";
+import { displayRules } from "../src/preset/tailwind/layout/display.ts";
+import { objectFitRules } from "../src/preset/tailwind/layout/object-fit.ts";
+import { objectPositionRules } from "../src/preset/tailwind/layout/object-position.ts";
+import { overflowRules } from "../src/preset/tailwind/layout/overflow.ts";
+import { overscrollRules } from "../src/preset/tailwind/layout/overscroll.ts";
+import { positionRules } from "../src/preset/tailwind/layout/position.ts";
+import { createZIndexRules } from "../src/preset/tailwind/layout/z-index.ts";
+import { match } from "./preset-helpers.ts";
 
-const ctx = (token: string): RuleContext => ({
-  rawSelector: token,
-  currentSelector: token,
-  variants: [],
-});
-
-const match = (token: string, rules: Rule[]) => matchRule(token, rules, ctx(token))?.css;
+const zIndexRules = createZIndexRules();
 
 describe("preset layout display", () => {
   it.each([

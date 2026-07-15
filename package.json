@@ -37,7 +37,7 @@
     "./cli": "./dist/cli.mjs",
     "./config": "./dist/config.mjs",
     "./helpers": "./dist/helpers.mjs",
-    "./preset": "./dist/preset.mjs",
+    "./preset/tailwind": "./dist/preset/tailwind.mjs",
     "./vite": "./dist/vite.mjs",
     "./package.json": "./package.json"
   },

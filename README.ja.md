@@ -107,28 +107,49 @@ rules: [
 
 ### プリセットの上限（cap）
 
-数値スケールを持つプリセットルールには、列挙可能に保つための上限が設定されています（`m-9999` のような範囲外のクラスはマッチしなくなります）。上限つきの各プリセットは、値を調整できる factory を提供します:
+数値スケールを持つプリセットルールには、列挙可能に保つための上限が設定されています（`m-9999` のような範囲外のクラスはマッチしなくなります）。上限は `tailwindPreset` の `options` で調整します（次節参照）:
 
 ```ts
-import { createSpacingRules, createSizingRules, createZIndexRules } from "regexcss/preset";
+...tailwindPreset({
+  options: {
+    spacing: { max: 32 }, // デフォルト 96（margin、padding）
+    sizing: { max: 64 }, // デフォルト 96（w、h、min-*、max-*、size）
+    "layout/z-index": { max: 100 }, // デフォルト 50
+  },
+}),
+```
+
+デフォルト値: `spacing` / `gap` / `sizing` → 96、`grid-cols` / `grid-rows` / `row-*` / `order` → 12、`z-index` → 50、`line-clamp` → 6。
+
+### プリセットの選択
+
+`tailwindPreset` はプリセット名からルールセットを組み立てます。名前はカテゴリ（`"spacing"`）でも単一ユーティリティ（`"typography/line-clamp"`）でもよく、`include` の順に出力されます（カスケード順）。`exclude` とカテゴリ／ユーティリティごとの factory `options` は任意で、引数なしなら全カテゴリが含まれます:
+
+```ts
+import { tailwindPreset } from "regexcss/preset/tailwind";
 
 rules: [
-  ...createSpacingRules({ max: 32 }), // デフォルト 96（margin、padding）
-  ...createSizingRules({ max: 64 }),  // デフォルト 96（w、h、min-*、max-*、size）
-  ...createZIndexRules({ max: 100 }), // デフォルト 50
+  ...tailwindPreset({
+    include: ["spacing", "layout", "sizing", "typography/line-clamp"],
+    exclude: ["layout/overscroll"], // 1ユーティリティだけ除外、カテゴリの残りは維持
+    options: {
+      sizing: { max: 64 }, // カテゴリオプションは配下の全ユーティリティに適用...
+      "sizing/width": { max: 32 }, // ...ユーティリティオプションが個別に上書き
+    },
+  }),
 ],
 ```
 
-デフォルト値: `spacing` / `gap` / `sizing` → 96、`grid-cols` / `grid-rows` / `row-*` / `order` → 12、`z-index` → 50、`line-clamp` → 6。従来のルール配列（`spacingRules` など）はデフォルト値を使用します。
+名前はすべて型付き（`TailwindPresetName` = カテゴリ + ユーティリティテーブル由来の `category/utility` パス）なので、存在しない名前やオプションの取り違えはコンパイル時に検出されます。重複は初出優先で除去され、`exclude` は常に `include` より優先されます。カテゴリ単位のオプションキーは共有スケールを持つカテゴリ（`sizing`、`spacing`）だけで、それ以外の調整可能ユーティリティは `category/utility` キーでオプションを受け取ります。カテゴリ／ユーティリティのテーブルは `tailwindPreset.categories` として参照できます。
 
 ## エントリーポイント
 
-| インポート         | 内容                                                                        |
-| ------------------ | --------------------------------------------------------------------------- |
-| `regexcss`         | `defineConfig`、`createGenerator`、型定義                                   |
-| `regexcss/vite`    | Vite プラグイン                                                             |
-| `regexcss/helpers` | `createVariant`、単位ヘルパー（`rem`、`px` など）、`@custom-media` パーサー |
-| `regexcss/preset`  | オプションの Tailwind 風ルールセット（`spacingRules`、`layoutRules` など）  |
+| インポート                 | 内容                                                                        |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `regexcss`                 | `defineConfig`、`createGenerator`、型定義                                   |
+| `regexcss/vite`            | Vite プラグイン                                                             |
+| `regexcss/helpers`         | `createVariant`、単位ヘルパー（`rem`、`px` など）、`@custom-media` パーサー |
+| `regexcss/preset/tailwind` | `tailwindPreset` — Tailwind 風ルールセット                                  |
 
 ## サンプル
 
