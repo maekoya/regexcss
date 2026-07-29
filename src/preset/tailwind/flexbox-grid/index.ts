@@ -3,7 +3,10 @@ import { alignContentRules } from "./align-content.ts";
 import { alignItemsRules } from "./align-items.ts";
 import { alignSelfRules } from "./align-self.ts";
 import { flexDirectionRules } from "./flex-direction.ts";
+import { createFlexGrowRules } from "./flex-grow.ts";
+import { createFlexShrinkRules } from "./flex-shrink.ts";
 import { flexWrapRules } from "./flex-wrap.ts";
+import { createFlexRules } from "./flex.ts";
 import { createGapRules } from "./gap.ts";
 import { gridAutoColumnsRules } from "./grid-auto-columns.ts";
 import { gridAutoFlowRules } from "./grid-auto-flow.ts";
@@ -15,16 +18,22 @@ import { justifyContentRules } from "./justify-content.ts";
 import { justifyItemsRules } from "./justify-items.ts";
 import { justifySelfRules } from "./justify-self.ts";
 import { createOrderRules } from "./order.ts";
+import { placeContentRules } from "./place-content.ts";
+import { placeItemsRules } from "./place-items.ts";
+import { placeSelfRules } from "./place-self.ts";
 
 // ONE canonical utility table. Key order = cascade order; keys are the utility file
 // basenames and become the `flexbox-grid/<slug>` names accepted by tailwindPreset.
-// Factory utilities (gap, grid-row, grid-template-*, order) are tuned via
-// utility-path options, e.g. `options: { "flexbox-grid/gap": { max: 4 } }`.
+// Factory utilities (flex, flex-grow, flex-shrink, gap, grid-row, grid-template-*,
+// order) are tuned via utility-path options, e.g. `options: { "flexbox-grid/gap": { max: 4 } }`.
 export const flexboxGridUtilities = {
   "align-content": alignContentRules,
   "align-items": alignItemsRules,
   "align-self": alignSelfRules,
+  flex: createFlexRules,
   "flex-direction": flexDirectionRules,
+  "flex-grow": createFlexGrowRules,
+  "flex-shrink": createFlexShrinkRules,
   "flex-wrap": flexWrapRules,
   gap: createGapRules,
   "grid-auto-columns": gridAutoColumnsRules,
@@ -37,4 +46,7 @@ export const flexboxGridUtilities = {
   "justify-items": justifyItemsRules,
   "justify-self": justifySelfRules,
   order: createOrderRules,
+  "place-content": placeContentRules,
+  "place-items": placeItemsRules,
+  "place-self": placeSelfRules,
 } satisfies UtilityTable;
