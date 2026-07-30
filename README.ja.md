@@ -119,7 +119,7 @@ rules: [
 }),
 ```
 
-デフォルト値: `spacing` / `gap` / `sizing` → 96、`grid-cols` / `grid-rows` / `row-*` / `order` → 12、`z-index` → 50、`line-clamp` → 6。
+デフォルト値: `spacing` / `gap` / `sizing` → 96、`grid-cols` / `grid-rows` / `col-*` / `row-*` / `order` → 12、`z-index` → 50、`line-clamp` → 6。
 
 ### プリセットの選択
 

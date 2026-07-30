@@ -17,6 +17,20 @@ describe("grid-row", () => {
     expect(match(token, gridRowRules)).toEqual({ "grid-row": value });
   });
 
+  it("resolves the numeric shorthand (incl. negative)", () => {
+    expect(match("row-3", gridRowRules)).toEqual({ "grid-row": "3" });
+    expect(match("-row-3", gridRowRules)).toEqual({ "grid-row": "-3" });
+  });
+
+  it("honours the max option", () => {
+    const capped = createGridRowRules({ max: 4 });
+    expect(match("row-span-4", capped)).toEqual({ "grid-row": "span 4 / span 4" });
+    expect(match("row-span-5", capped)).toBeUndefined();
+    expect(match("row-start-5", capped)).toBeUndefined();
+    expect(match("row-end-5", capped)).toBeUndefined();
+    expect(match("row-5", capped)).toBeUndefined();
+  });
+
   it("resolves grid-row-start (incl. negative and auto)", () => {
     expect(match("row-start-auto", gridRowRules)).toEqual({ "grid-row-start": "auto" });
     expect(match("row-start-2", gridRowRules)).toEqual({ "grid-row-start": "2" });

@@ -21,6 +21,16 @@ export const createGridRowRules = ({ max = 12 }: GridRowOptions = {}): Rule[] =>
         ([, n]) => (n && Number(n) <= max ? { "grid-row": `span ${n} / span ${n}` } : undefined),
         { samples: [{ class: "row-span-<num>", style: "grid-row: span <num> / span <num>;" }] },
       ],
+      [
+        /^(-?)row-(\d+)$/,
+        ([, neg, n]) => (n && Number(n) <= max ? { "grid-row": `${neg ?? ""}${n}` } : undefined),
+        {
+          samples: [
+            { class: "row-<num>", style: "grid-row: <num>;" },
+            { class: "-row-<num>", style: "grid-row: -<num>;" },
+          ],
+        },
+      ],
       [/^row-start-auto$/, () => ({ "grid-row-start": "auto" })],
       [
         /^(-?)row-start-(\d+)$/,

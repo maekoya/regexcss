@@ -121,7 +121,7 @@ Preset rules with numeric scales are capped so they stay enumerable (and out-of-
 }),
 ```
 
-Defaults: `spacing` / `gap` / `sizing` → 96, `grid-cols` / `grid-rows` / `row-*` / `order` → 12, `z-index` → 50, `line-clamp` → 6.
+Defaults: `spacing` / `gap` / `sizing` → 96, `grid-cols` / `grid-rows` / `col-*` / `row-*` / `order` → 12, `z-index` → 50, `line-clamp` → 6.
 
 ### Selecting presets
 

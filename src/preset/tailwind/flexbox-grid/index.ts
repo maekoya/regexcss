@@ -11,6 +11,7 @@ import { createGapRules } from "./gap.ts";
 import { gridAutoColumnsRules } from "./grid-auto-columns.ts";
 import { gridAutoFlowRules } from "./grid-auto-flow.ts";
 import { gridAutoRowsRules } from "./grid-auto-rows.ts";
+import { createGridColumnRules } from "./grid-column.ts";
 import { createGridRowRules } from "./grid-row.ts";
 import { createGridTemplateColumnsRules } from "./grid-template-columns.ts";
 import { createGridTemplateRowsRules } from "./grid-template-rows.ts";
@@ -24,8 +25,9 @@ import { placeSelfRules } from "./place-self.ts";
 
 // ONE canonical utility table. Key order = cascade order; keys are the utility file
 // basenames and become the `flexbox-grid/<slug>` names accepted by tailwindPreset.
-// Factory utilities (flex, flex-grow, flex-shrink, gap, grid-row, grid-template-*,
-// order) are tuned via utility-path options, e.g. `options: { "flexbox-grid/gap": { max: 4 } }`.
+// Factory utilities (flex, flex-grow, flex-shrink, gap, grid-column, grid-row,
+// grid-template-*, order) are tuned via utility-path options,
+// e.g. `options: { "flexbox-grid/gap": { max: 4 } }`.
 export const flexboxGridUtilities = {
   "align-content": alignContentRules,
   "align-items": alignItemsRules,
@@ -39,6 +41,7 @@ export const flexboxGridUtilities = {
   "grid-auto-columns": gridAutoColumnsRules,
   "grid-auto-flow": gridAutoFlowRules,
   "grid-auto-rows": gridAutoRowsRules,
+  "grid-column": createGridColumnRules,
   "grid-row": createGridRowRules,
   "grid-template-columns": createGridTemplateColumnsRules,
   "grid-template-rows": createGridTemplateRowsRules,
