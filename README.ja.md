@@ -71,6 +71,15 @@ export default defineConfig({
 
 これでコンテンツ中の `class="m-4 hover:text-center"` から、あなたが定義したとおりの CSS だけが生成されます。
 
+この `@import` が展開されるのは `.css` / `.scss` / `.less` / `.pcss` / `.postcss` ファイルと、Vue・Svelte コンポーネントの `<style>` / `<style lang="scss">` ブロックです。インデントベースの構文（`.sass` / `.styl` / `.sss`）は生成 CSS を差し込む波括弧を持たないため、代わりに JS から仮想モジュールを読み込んでください:
+
+```ts
+// main.ts
+import "virtual:regexcss.css";
+```
+
+このエントリポイントはどの構成でも利用できます。`<style scoped>` から `@import` するとユーティリティが 1 コンポーネントに閉じてしまうため、その場合もこちらを使ってください。
+
 ## CLI — クラス一覧ドキュメント
 
 `regexcss docs` は、config が定義するすべてのクラスを、それぞれが生成する CSS とともに一覧掲載する自己完結の HTML ページを生成します:

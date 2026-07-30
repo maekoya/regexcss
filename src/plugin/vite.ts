@@ -18,6 +18,33 @@ const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 // pathological strings like `@import "regexcss" layer((…` (CodeQL js/polynomial-redos).
 const CSS_IMPORT_RE = /@import\s+["']regexcss["'](?:\s+layer\(([^()]+)\))?;?/g;
 
+// Style syntaxes the expansion above can target. The plugin is `enforce: "pre"`, so
+// transform sees preprocessor sources *before* sass/less/postcss run — matching by
+// extension is what makes `@import "regexcss"` work in a `.scss` file at all.
+// "braced" = CSS-superset syntax, generated CSS can be appended verbatim.
+// "indented" = whitespace-significant syntax where braces are a syntax error.
+const BRACED_EXT_RE = /^(?:css|scss|less|pcss|postcss)$/;
+const INDENTED_EXT_RE = /^(?:sass|styl|stylus|sss)$/;
+// SFC <style> blocks carry the *component's* extension, so the real syntax only
+// shows up in the query: `App.vue?vue&type=style&index=0&lang.scss`.
+const LANG_QUERY_RE = /[?&]lang\.([a-z]+)/;
+// `?raw` / `?url` ask for the file itself, not for a stylesheet — never rewrite those.
+const NON_STYLE_QUERY_RE = /[?&](?:raw|url)(?:[&=]|$)/;
+// Vue/Svelte scoped blocks: generated utilities would get the component's data
+// attribute stapled on and stop being global. Worth a warning, not a hard error.
+const SCOPED_QUERY_RE = /[?&]scoped(?:[&=]|$)/;
+
+type StyleSyntax = "braced" | "indented";
+
+const styleSyntax = (file: string, query: string): StyleSyntax | undefined => {
+  if (NON_STYLE_QUERY_RE.test(query)) return undefined;
+  const ext = LANG_QUERY_RE.exec(query)?.[1] ?? /\.([^./\\]+)$/.exec(file)?.[1];
+  if (ext === undefined) return undefined;
+  if (BRACED_EXT_RE.test(ext)) return "braced";
+  if (INDENTED_EXT_RE.test(ext)) return "indented";
+  return undefined;
+};
+
 export interface PluginOptions {
   /** Inline config. Takes precedence over `configFile` and auto-discovery. */
   config?: UserConfig;
@@ -75,6 +102,8 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
   let lastConfigReloadKey: string | undefined;
   let lastTokenDiff: { key: string; changed: boolean } | undefined;
   let configReloadPromise: Promise<void> | undefined;
+  // Scoped SFC style blocks already warned about, keyed by module id (see SCOPED_QUERY_RE).
+  const warnedScoped = new Set<string>();
   // Tokens already warned about — generate() re-reports cached warnings on every call,
   // so without this every HMR pass would repeat them. Cleared on config rebuild.
   const warnedTokens = new Set<string>();
@@ -269,9 +298,12 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
     // `layer(name)` 構文に対応：CSS 側で指定された name は config.layerName を上書き
     async transform(code, id) {
       if (id === RESOLVED_ID) return null;
-      // module ids may carry a query (`/main.css?direct`) — match on the file part
-      const file = id.split("?", 1)[0] ?? id;
-      if (!file.endsWith(".css")) return null;
+      // module ids may carry a query (`/main.css?direct`, `/App.vue?vue&type=style&lang.scss`)
+      const q = id.indexOf("?");
+      const file = q === -1 ? id : id.slice(0, q);
+      const query = q === -1 ? "" : id.slice(q);
+      const syntax = styleSyntax(file, query);
+      if (syntax === undefined) return null;
       if (file.includes("/node_modules/")) return null;
       if (!CSS_IMPORT_RE.test(code)) {
         // this file (no longer) embeds generated CSS — drop it from the refresh list
@@ -279,6 +311,23 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
         return null;
       }
       CSS_IMPORT_RE.lastIndex = 0;
+      if (syntax === "indented") {
+        // Braces are a syntax error here, so there is no way to inline the generated
+        // CSS. Fail with the fix rather than emitting something the compiler rejects.
+        this.error(
+          `[regexcss] ${relative(root, file)} uses an indentation-based style syntax — ` +
+            `\`@import "regexcss"\` cannot be expanded into it. ` +
+            `Import \`${VIRTUAL_ID}\` from JS instead, or move the import into a .css/.scss/.less file.`,
+        );
+      }
+      if (SCOPED_QUERY_RE.test(query) && !warnedScoped.has(id)) {
+        warnedScoped.add(id);
+        this.environment?.logger?.warn(
+          `[regexcss] ${relative(root, file)} imports "regexcss" from a scoped <style> block — ` +
+            `the generated utilities will be scoped to this component. ` +
+            `Use a non-scoped block or import \`${VIRTUAL_ID}\` from JS for global utilities.`,
+        );
+      }
       if (!generator) {
         // Left untouched, `@import "regexcss"` would resolve to this package's JS
         // entry and LightningCSS would die on it with a cryptic

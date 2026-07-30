@@ -73,6 +73,15 @@ For matches a literal prefix can't express, pass a raw `[RegExp, handler]` tuple
 
 Now `class="m-4 hover:text-center"` in your content produces exactly the CSS you defined — nothing more.
 
+The import is expanded in `.css`, `.scss`, `.less`, `.pcss` and `.postcss` files, and in `<style>` / `<style lang="scss">` blocks of Vue and Svelte components. Indentation-based syntaxes (`.sass`, `.styl`, `.sss`) have no braces to inline the generated CSS into — import the virtual module from JS instead:
+
+```ts
+// main.ts
+import "virtual:regexcss.css";
+```
+
+That entry point also works everywhere else, and is the way to get the utilities out of a scoped `<style scoped>` block, which would otherwise limit them to a single component.
+
 ## CLI — class reference docs
 
 `regexcss docs` generates a self-contained HTML page listing every class your config defines, with the CSS each one produces:
