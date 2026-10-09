@@ -58,11 +58,10 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "bumpp": "^11.1.0",
+    "bumpp": "^12.3.0",
     "typescript": "7.0.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.5",
-    "vite-plus": "0.2.5",
-    "vitest": "4.1.10"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0",
+    "vite-plus": "1.1.0"
   },
   "peerDependencies": {
     "vite": "^8"
@@ -75,5 +74,5 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@11.13.1"
+  "packageManager": "pnpm@11.28.2"
 }

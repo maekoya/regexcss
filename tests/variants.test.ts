@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { applyVariantChain, normalizeVariants } from "../src/core/variants.ts";
 import { createVariant } from "../src/helpers.ts";
 import type { Variant, VariantInput } from "../src/types.ts";

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { renderLayer } from "../src/core/layer.ts";
 
 describe("renderLayer", () => {

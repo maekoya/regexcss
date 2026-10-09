@@ -28,7 +28,7 @@ Host. Open a project that has a `regexcss.config.ts` and try hover and completio
 ## Test
 
 ```sh
-vp test    # from the monorepo root — its vitest include covers packages/*/tests/**
+vp test    # from the monorepo root — the `test.include` in its vite.config.ts covers packages/*/tests/**
 ```
 
 The pure logic ([format.ts](./src/format.ts) / [tokens.ts](./src/tokens.ts) /

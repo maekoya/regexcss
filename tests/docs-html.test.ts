@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import type { DocClass, DocRule, DocsData } from "../src/docs/enumerate.ts";
 import { renderDocsHtml } from "../src/docs/render-html.ts";
 
@@ -112,10 +112,11 @@ describe("renderDocsHtml", () => {
   });
 
   it("renders every accordion open by default", () => {
-    const many = Array.from(
-      { length: 50 },
-      (_, i): DocClass => ({ kind: "class", className: `m-${i}`, css: "margin: 0;" }),
-    );
+    const many = Array.from({ length: 50 }, (_, i): DocClass => ({
+      kind: "class",
+      className: `m-${i}`,
+      css: "margin: 0;",
+    }));
     const html = renderDocsHtml(data({ rules: [rule({ classes: many })] }));
     expect(html).toContain("<details open>");
     expect(html).not.toContain("<details>");

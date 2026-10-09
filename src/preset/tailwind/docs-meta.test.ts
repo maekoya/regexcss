@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { enumerateClasses } from "../../docs/enumerate.ts";
 import type { Rule } from "../../types.ts";
 import { createGapRules } from "./flexbox-grid/gap.ts";
