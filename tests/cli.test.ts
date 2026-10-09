@@ -57,6 +57,43 @@ describe("runCli", () => {
     expect(data.warnings).toEqual([]);
   });
 
+  it("writes DocsData JSON to --out with --json", async () => {
+    await writeFile(join(dir, "regexcss.config.ts"), CONFIG_TS, "utf8");
+    const code = await cli(["docs", "--json", "--max-number", "2", "-o", "docs/classes.json"]);
+    expect(code).toBe(0);
+    const data = JSON.parse(await readFile(join(dir, "docs", "classes.json"), "utf8"));
+    expect(data.rules[0].classes.map((c: { className: string }) => c.className)).toEqual(["m-0", "m-1", "m-2"]);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toContain("classes.json");
+  });
+
+  it("lists real class names instead of samples with --concrete", async () => {
+    await writeFile(
+      join(dir, "regexcss.config.ts"),
+      `export default { rules: [[/^m-(\\d)$/, ([, n]) => ({ margin: \`\${n}px\` }), { samples: [{ class: "m-<n>", style: "margin: <n>px;" }] }]] };`,
+      "utf8",
+    );
+    expect(await cli(["docs", "--json"])).toBe(0);
+    expect(JSON.parse(out.join("\n")).rules[0].classes).toEqual([
+      { kind: "sample", className: "m-<n>", css: "margin: <n>px;" },
+    ]);
+
+    out = [];
+    expect(await cli(["docs", "--json", "--concrete", "--max-number", "1"])).toBe(0);
+    const classes = JSON.parse(out.join("\n")).rules[0].classes;
+    expect(classes.map((c: { kind: string; className: string }) => [c.kind, c.className])).toEqual([
+      ["class", "m-0"],
+      ["class", "m-1"],
+    ]);
+  });
+
+  it("serializes absent metadata as null so every key is present", async () => {
+    await writeFile(join(dir, "regexcss.config.ts"), CONFIG_TS, "utf8");
+    expect(await cli(["docs", "--json"])).toBe(0);
+    const rule = JSON.parse(out.join("\n")).rules[0];
+    expect(rule).toMatchObject({ index: 0, label: null, category: null, note: null });
+  });
+
   it("exits 1 with a clear message when no config exists", async () => {
     const code = await cli(["docs"]);
     expect(code).toBe(1);

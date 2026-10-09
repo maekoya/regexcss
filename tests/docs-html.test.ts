@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { DocRule, DocsData } from "../src/docs/enumerate.ts";
+import type { DocClass, DocRule, DocsData } from "../src/docs/enumerate.ts";
 import { renderDocsHtml } from "../src/docs/render-html.ts";
 
 const rule = (overrides: Partial<DocRule> = {}): DocRule => ({
+  index: 0,
   source: "^m-(\\d+)$",
-  label: undefined,
+  label: null,
   category: "spacing",
   tags: [],
-  note: undefined,
+  note: null,
   classes: [
-    { className: "m-1", css: "margin: 0.25rem;" },
-    { className: "m-2", css: "margin: 0.5rem;" },
+    { kind: "class", className: "m-1", css: "margin: 0.25rem;" },
+    { kind: "class", className: "m-2", css: "margin: 0.5rem;" },
   ],
   enumerable: true,
   ...overrides,
@@ -21,8 +22,8 @@ const data = (overrides: Partial<DocsData> = {}): DocsData => ({
     rule(),
     rule({
       source: "^flex$",
-      category: undefined,
-      classes: [{ className: "flex", css: "display: flex;" }],
+      category: null,
+      classes: [{ kind: "class", className: "flex", css: "display: flex;" }],
     }),
   ],
   variants: [],
@@ -97,7 +98,7 @@ describe("renderDocsHtml", () => {
             source: "^-m-(\\d+)$",
             label: "margin",
             note: "1 unit = 0.25rem",
-            classes: [{ className: "-m-1", css: "margin: -0.25rem;" }],
+            classes: [{ kind: "class", className: "-m-1", css: "margin: -0.25rem;" }],
           }),
         ],
       }),
@@ -111,7 +112,10 @@ describe("renderDocsHtml", () => {
   });
 
   it("renders every accordion open by default", () => {
-    const many = Array.from({ length: 50 }, (_, i) => ({ className: `m-${i}`, css: "margin: 0;" }));
+    const many = Array.from(
+      { length: 50 },
+      (_, i): DocClass => ({ kind: "class", className: `m-${i}`, css: "margin: 0;" }),
+    );
     const html = renderDocsHtml(data({ rules: [rule({ classes: many })] }));
     expect(html).toContain("<details open>");
     expect(html).not.toContain("<details>");
@@ -153,11 +157,11 @@ describe("renderDocsHtml", () => {
             {
               label: "hover",
               source: "^hover:",
-              group: undefined,
+              group: null,
               note: "&:hover",
               sample: ".hover\\:<utility>:hover { … }",
             },
-            { label: "^dark:", source: "^dark:", group: undefined, note: undefined, sample: undefined },
+            { label: "^dark:", source: "^dark:", group: null, note: null, sample: null },
           ],
         }),
       );
@@ -181,7 +185,7 @@ describe("renderDocsHtml", () => {
             source: "^-m-(\\d+)$",
             label: "margin",
             tags: ["custom"],
-            classes: [{ className: "-m-1", css: "margin: -0.25rem;" }],
+            classes: [{ kind: "class", className: "-m-1", css: "margin: -0.25rem;" }],
           }),
         ],
       }),
@@ -205,7 +209,7 @@ describe("renderDocsHtml", () => {
             source: "^-m-(\\d+)$",
             label: "margin",
             tags: ["preset"],
-            classes: [{ className: "-m-1", css: "margin: -0.25rem;" }],
+            classes: [{ kind: "class", className: "-m-1", css: "margin: -0.25rem;" }],
           }),
         ],
       }),
@@ -223,7 +227,11 @@ describe("renderDocsHtml", () => {
       data({
         rules: [
           rule({ label: "margin", category: "spacing", tags: ["preset"] }),
-          rule({ source: "^flex$", category: undefined, classes: [{ className: "flex", css: "display: flex;" }] }),
+          rule({
+            source: "^flex$",
+            category: null,
+            classes: [{ kind: "class", className: "flex", css: "display: flex;" }],
+          }),
         ],
       }),
     );
@@ -237,9 +245,13 @@ describe("renderDocsHtml", () => {
       data({
         rules: [
           rule({ label: "margin" }),
-          rule({ source: "^p-(\\d+)$", label: "padding", classes: [{ className: "p-1", css: "padding: 0.25rem;" }] }),
-          rule({ source: "^flex$", classes: [{ className: "flex", css: "display: flex;" }] }),
-          rule({ source: "^grow$", classes: [{ className: "grow", css: "flex-grow: 1;" }] }),
+          rule({
+            source: "^p-(\\d+)$",
+            label: "padding",
+            classes: [{ kind: "class", className: "p-1", css: "padding: 0.25rem;" }],
+          }),
+          rule({ source: "^flex$", classes: [{ kind: "class", className: "flex", css: "display: flex;" }] }),
+          rule({ source: "^grow$", classes: [{ kind: "class", className: "grow", css: "flex-grow: 1;" }] }),
         ],
       }),
     );
@@ -267,8 +279,8 @@ describe("renderDocsHtml", () => {
           rule({
             source: "^a<b&c$",
             label: '<lab"el>',
-            category: undefined,
-            classes: [{ className: 'x"<y', css: 'content: "<&>";' }],
+            category: null,
+            classes: [{ kind: "class", className: 'x"<y', css: 'content: "<&>";' }],
           }),
         ],
       }),
@@ -299,7 +311,9 @@ describe("renderDocsHtml", () => {
 
   it("renders warnings in the footer only when present", () => {
     expect(renderDocsHtml(data())).not.toContain("<footer>");
-    const html = renderDocsHtml(data({ warnings: ["rule #0: something <odd>"] }));
+    const html = renderDocsHtml(
+      data({ warnings: [{ code: "capped", ruleIndex: 0, source: "^m-(\\d+)$", message: "rule #0: something <odd>" }] }),
+    );
     expect(html).toContain("<footer>");
     expect(html).toContain("something &lt;odd&gt;");
   });

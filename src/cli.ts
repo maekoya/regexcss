@@ -15,10 +15,12 @@ Generate an HTML page listing every class your regexcss config defines.
 
 Options:
   -c, --config <path>   config file (default: auto-discover regexcss.config.{ts,mts,js,mjs,cjs})
-  -o, --out <path>      output HTML file (default: regexcss-docs.html)
-      --json            print the docs data as JSON to stdout instead of writing HTML
+  -o, --out <path>      output file (default: regexcss-docs.html)
+      --json            emit the docs data as JSON instead of HTML — to --out when
+                        given, otherwise to stdout
       --max-number <n>  upper bound when expanding \\d+ from rule regexes (default: 12)
       --max-classes <n> max classes documented per rule (default: 100, 0 = no cap)
+      --concrete        ignore rule samples and list real class names from every regex
       --title <text>    HTML page title (default: "regexcss classes")
   -h, --help            show this help
   -v, --version         print the version`;
@@ -42,6 +44,7 @@ export const runCli = async (argv: string[], options: RunCliOptions = {}): Promi
     json?: boolean;
     "max-number"?: string;
     "max-classes"?: string;
+    concrete?: boolean;
     title?: string;
     help?: boolean;
     version?: boolean;
@@ -57,6 +60,7 @@ export const runCli = async (argv: string[], options: RunCliOptions = {}): Promi
         json: { type: "boolean" },
         "max-number": { type: "string" },
         "max-classes": { type: "string" },
+        concrete: { type: "boolean" },
         title: { type: "string" },
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
@@ -107,17 +111,19 @@ export const runCli = async (argv: string[], options: RunCliOptions = {}): Promi
     return 1;
   }
 
-  const data = enumerateClasses(config, { maxNumber, maxClassesPerRule });
-  for (const warning of data.warnings) stderr(`warning: ${warning}`);
+  const data = enumerateClasses(config, { maxNumber, maxClassesPerRule, concrete: values.concrete });
+  for (const warning of data.warnings) stderr(`warning: ${warning.message}`);
 
-  if (values.json) {
+  // --json without --out keeps the pipe-friendly stdout behavior
+  if (values.json && values.out === undefined) {
     stdout(JSON.stringify(data, null, 2));
     return 0;
   }
 
   const outPath = resolve(cwd, values.out ?? "regexcss-docs.html");
+  const body = values.json ? `${JSON.stringify(data, null, 2)}\n` : renderDocsHtml(data, { title: values.title });
   await mkdir(dirname(outPath), { recursive: true });
-  await writeFile(outPath, renderDocsHtml(data, { title: values.title }), "utf8");
+  await writeFile(outPath, body, "utf8");
   const totalClasses = data.rules.reduce((n, r) => n + r.classes.length, 0);
   const suffix = data.warnings.length > 0 ? `, ${data.warnings.length} warnings` : "";
   stdout(`${totalClasses} classes from ${data.rules.length} rules (${sources[0]})${suffix} → ${outPath}`);

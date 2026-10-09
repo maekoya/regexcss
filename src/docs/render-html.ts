@@ -75,7 +75,7 @@ const renderPattern = (rule: DocRule): string => {
 };
 
 interface RuleGroup {
-  label: string | undefined;
+  label: string | null;
   rules: DocRule[];
 }
 
@@ -84,13 +84,13 @@ const groupByLabel = (rules: DocRule[]): RuleGroup[] => {
   const groups: RuleGroup[] = [];
   const byLabel = new Map<string, RuleGroup>();
   for (const rule of rules) {
-    const existing = rule.label === undefined ? undefined : byLabel.get(rule.label);
+    const existing = rule.label === null ? undefined : byLabel.get(rule.label);
     if (existing) {
       existing.rules.push(rule);
       continue;
     }
     const group: RuleGroup = { label: rule.label, rules: [rule] };
-    if (rule.label !== undefined) byLabel.set(rule.label, group);
+    if (rule.label !== null) byLabel.set(rule.label, group);
     groups.push(group);
   }
   return groups;
@@ -98,7 +98,7 @@ const groupByLabel = (rules: DocRule[]): RuleGroup[] => {
 
 // notes from a group's rules, deduped, each as its own line under the heading
 const renderNotes = (rules: DocRule[]): string => {
-  const notes = [...new Set(rules.map((r) => r.note).filter((n): n is string => n !== undefined && n !== ""))];
+  const notes = [...new Set(rules.map((r) => r.note).filter((n): n is string => n !== null && n !== ""))];
   return notes.map((n) => `<p class="note">${escapeHtml(n)}</p>`).join("\n");
 };
 
@@ -118,7 +118,7 @@ const renderGroup = (group: RuleGroup, id: string): RenderedGroup => {
   const dataLabel = escapeHtml([headingText, ...tags].join(" ").toLowerCase());
 
   // sidebar link: label text, or the raw regex for unlabeled rules
-  const navText = group.label === undefined ? `<code>/${escapeHtml(headingText)}/</code>` : escapeHtml(group.label);
+  const navText = group.label === null ? `<code>/${escapeHtml(headingText)}/</code>` : escapeHtml(group.label);
   const navLink = `<a href="#${id}" data-label="${dataLabel}">${navText}</a>`;
 
   // section heading: single rules reuse renderHeading (regex-fallback + preset hide);
@@ -238,7 +238,7 @@ export const renderDocsHtml = (data: DocsData, options: RenderDocsHtmlOptions = 
   const footer =
     data.warnings.length === 0
       ? ""
-      : `<footer><h2>Warnings</h2><ul>\n${data.warnings.map((w) => `<li>${escapeHtml(w)}</li>`).join("\n")}\n</ul></footer>`;
+      : `<footer><h2>Warnings</h2><ul>\n${data.warnings.map((w) => `<li>${escapeHtml(w.message)}</li>`).join("\n")}\n</ul></footer>`;
 
   return `<!doctype html>
 <html lang="en">

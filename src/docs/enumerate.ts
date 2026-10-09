@@ -6,6 +6,12 @@ import { expandRegexSource } from "./regex-expand.ts";
 
 /** One documented class: its (prefixed) name and the declarations it generates. */
 export interface DocClass {
+  /**
+   * `"class"` for a real class name enumerated from the rule's regex; `"sample"` for a
+   * {@link RuleMeta.samples} entry, whose `className` / `css` may hold display-only
+   * placeholders like `<num>`.
+   */
+  kind: "class" | "sample";
   className: string;
   /** Generated declarations, e.g. `"margin-top: 1rem;"` — no selector or at-rule wrappers. */
   css: string;
@@ -13,16 +19,18 @@ export interface DocClass {
 
 /** Docs entry for a single rule, in rule definition order. */
 export interface DocRule {
+  /** The rule's position in `config.rules` (hidden rules keep their slot, so this can skip). */
+  index: number;
   /** The rule's regex source, shown alongside (or, without a label, as) the rule heading. */
   source: string;
   /** Display name from {@link RuleMeta.label}; docs fall back to `source` when absent. */
-  label: string | undefined;
+  label: string | null;
   /** Grouping label from {@link RuleMeta.category}, if any. */
-  category: string | undefined;
+  category: string | null;
   /** Tags from {@link RuleMeta.tags} (preset rules carry `"preset"`). */
   tags: string[];
   /** Free-text note from {@link RuleMeta.note}, rendered under the rule. */
-  note: string | undefined;
+  note: string | null;
   /** Classes attributed to this rule: verbatim samples, or classes derived from the regex. */
   classes: DocClass[];
   /** `false` when the rule has no samples and its regex could not be expanded. */
@@ -36,17 +44,32 @@ export interface DocVariant {
   /** The variant's regex source (e.g. `"^md:"`), shown for context. */
   source: string;
   /** Exclusivity group from {@link VariantMeta.group}, if any. */
-  group: string | undefined;
+  group: string | null;
   /** Free-text summary from {@link VariantMeta.note}, if any. */
-  note: string | undefined;
+  note: string | null;
   /** Example output from {@link VariantMeta.sample}, if any. */
-  sample: string | undefined;
+  sample: string | null;
+}
+
+/** An enumeration problem with one rule. */
+export interface DocWarning {
+  /**
+   * `"not-enumerable"`: the regex could not be expanded and the rule has no samples.
+   * `"capped"`: the rule matched more classes than `maxClassesPerRule` and was truncated.
+   */
+  code: "not-enumerable" | "capped";
+  /** The rule's position in `config.rules` — matches {@link DocRule.index}. */
+  ruleIndex: number;
+  /** The rule's regex source. */
+  source: string;
+  /** Human-readable description, as printed by the CLI. */
+  message: string;
 }
 
 export interface DocsData {
   rules: DocRule[];
   variants: DocVariant[];
-  warnings: string[];
+  warnings: DocWarning[];
 }
 
 export interface EnumerateOptions {
@@ -88,7 +111,7 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
   const cap = rawCap > 0 ? rawCap : Number.POSITIVE_INFINITY; // 0 (or less) = no cap
   const prefix = config.prefix ?? "";
   const rules = config.rules;
-  const warnings: string[] = [];
+  const warnings: DocWarning[] = [];
   const seen = new Set<string>();
 
   // one record per rule (parallel index with `rules` / `docRules`) so the sample /
@@ -99,12 +122,13 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
     matched: 0, // classes matched (whether shown or capped) — drives the truncation warning
   }));
 
-  const docRules: DocRule[] = rules.map(([re, , meta]) => ({
+  const docRules: DocRule[] = rules.map(([re, , meta], index) => ({
+    index,
     source: re.source,
-    label: meta?.label,
-    category: meta?.category,
+    label: meta?.label ?? null,
+    category: meta?.category ?? null,
     tags: meta?.tags ?? [],
-    note: meta?.note,
+    note: meta?.note ?? null,
     classes: [],
     enumerable: true,
   }));
@@ -117,16 +141,19 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
     // which always enumerates real class names from the regex instead)
     const samples = meta?.samples;
     if (!options.concrete && samples && samples.length > 0) {
-      for (const s of samples) docRule.classes.push({ className: prefix + s.class, css: s.style });
+      for (const s of samples) docRule.classes.push({ kind: "sample", className: prefix + s.class, css: s.style });
       return;
     }
 
     // no samples: best-effort enumerate from the regex, verified against all rules
     const candidates = expandRegexSource(re.source, maxNumber);
     if (candidates === undefined) {
-      warnings.push(
-        `rule #${index} (/${re.source}/): could not be enumerated from its regex; add \`samples\` to its rule meta`,
-      );
+      warnings.push({
+        code: "not-enumerable",
+        ruleIndex: index,
+        source: re.source,
+        message: `rule #${index} (/${re.source}/): could not be enumerated from its regex; add \`samples\` to its rule meta`,
+      });
       docRule.enumerable = false;
       return;
     }
@@ -144,7 +171,11 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
       winner.matched = shown + 1;
       // keep matching (so the count is accurate) but stop adding rows past the cap
       if (shown < cap) {
-        docRules[match.index]?.classes.push({ className: prefix + candidate, css: stringifyDeclarations(match.css) });
+        docRules[match.index]?.classes.push({
+          kind: "class",
+          className: prefix + candidate,
+          css: stringifyDeclarations(match.css),
+        });
       }
     }
   });
@@ -152,10 +183,14 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
   // warn (but keep the classes shown) when a rule was truncated to the cap
   if (Number.isFinite(cap)) {
     perRule.forEach(({ matched }, i) => {
+      const source = docRules[i]?.source ?? "";
       if (matched > cap) {
-        warnings.push(
-          `rule #${i} (/${docRules[i]?.source}/): capped at ${cap} of ${matched} classes in the docs; add \`samples\` to document it compactly`,
-        );
+        warnings.push({
+          code: "capped",
+          ruleIndex: i,
+          source,
+          message: `rule #${i} (/${source}/): capped at ${cap} of ${matched} classes in the docs; add \`samples\` to document it compactly`,
+        });
       }
     });
   }
@@ -165,9 +200,9 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
   const variants: DocVariant[] = normalizeVariants(config.variants ?? []).map(([re, , meta]) => ({
     label: meta?.label ?? re.source,
     source: re.source,
-    group: meta?.group,
-    note: meta?.note,
-    sample: meta?.sample,
+    group: meta?.group ?? null,
+    note: meta?.note ?? null,
+    sample: meta?.sample ?? null,
   }));
 
   return { rules: docRules.filter((_, i) => !perRule[i]?.hidden), variants, warnings };
