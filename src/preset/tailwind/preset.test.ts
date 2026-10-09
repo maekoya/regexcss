@@ -1,5 +1,5 @@
 import { readdirSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import type { Rule } from "../../types.ts";
 import { match } from "../test-helpers.ts";
 import { tailwindPreset, type TailwindPresetName } from "./index.ts";

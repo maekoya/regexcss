@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { match as matchIn } from "../../test-helpers.ts";
 import { backgroundColorRules } from "./background-color.ts";
 

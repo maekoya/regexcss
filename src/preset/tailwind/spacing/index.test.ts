@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { match } from "../../test-helpers.ts";
 import { tailwindPreset } from "../index.ts";
 import type { SpacingOptions } from "./index.ts";

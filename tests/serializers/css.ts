@@ -1,4 +1,4 @@
-import type { SnapshotSerializer } from "vitest";
+import type { SnapshotSerializer } from "vite-plus/test";
 
 const normalize = (s: string): string =>
   s

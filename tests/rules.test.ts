@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { matchRule } from "../src/core/rules.ts";
 import type { Rule, RuleContext } from "../src/types.ts";
 

@@ -1,11 +1,7 @@
 // Plain SCSS module — variables and a mixin, consumed through `@use` in main.scss.
 // Its only job is to make this example unmistakably SCSS rather than CSS with a
 // different extension.
-$font-stack:
-  system-ui,
-  -apple-system,
-  "Helvetica Neue",
-  sans-serif;
+$font-stack: system-ui, -apple-system, "Helvetica Neue", sans-serif;
 $bg: #fffdd0;
 $ink: #1f2933;
 $gap: 1.5rem;

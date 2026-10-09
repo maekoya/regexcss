@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { enumerateClasses } from "../src/docs/enumerate.ts";
 import { createVariant } from "../src/helpers.ts";
 import type { Rule, Variant } from "../src/types.ts";

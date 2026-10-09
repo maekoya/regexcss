@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { createContentMatcher, orderConfigCandidates } from "../src/content.ts";
 
 // Pure string-level matching — no filesystem needed (unlike the old walk-up resolver).
