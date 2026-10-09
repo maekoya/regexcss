@@ -22,8 +22,8 @@ describe("enumerateClasses — samples (verbatim)", () => {
     ];
     const result = enumerateClasses({ rules });
     expect(result.rules[0]?.classes).toEqual([
-      { className: "m-{num}", css: "margin: {num / 4}rem;" },
-      { className: "-m-{num}", css: "margin: -{num / 4}rem;" },
+      { kind: "sample", className: "m-{num}", css: "margin: {num / 4}rem;" },
+      { kind: "sample", className: "-m-{num}", css: "margin: -{num / 4}rem;" },
     ]);
     expect(result.warnings).toEqual([]);
   });
@@ -34,7 +34,7 @@ describe("enumerateClasses — samples (verbatim)", () => {
       [/^m-(\d+)$/, () => ({ margin: "0" }), { samples: [{ class: "m-{num}", style: "anything at all" }] }],
     ];
     const result = enumerateClasses({ rules });
-    expect(result.rules[0]?.classes).toEqual([{ className: "m-{num}", css: "anything at all" }]);
+    expect(result.rules[0]?.classes).toEqual([{ kind: "sample", className: "m-{num}", css: "anything at all" }]);
     expect(result.warnings).toEqual([]);
   });
 
@@ -62,7 +62,7 @@ describe("enumerateClasses — samples (verbatim)", () => {
     expect(names(docs)).toEqual(["m-{num}"]); // sample pattern
     const concrete = enumerateClasses({ rules }, { maxNumber: 3, concrete: true });
     expect(names(concrete)).toEqual(["m-0", "m-1", "m-2", "m-3"]); // real classes with CSS
-    expect(concrete.rules[0]?.classes[0]?.css).toBe("margin: 0px;");
+    expect(concrete.rules[0]?.classes[0]).toEqual({ kind: "class", className: "m-0", css: "margin: 0px;" });
   });
 });
 
@@ -109,8 +109,13 @@ describe("enumerateClasses — regex fallback (no samples)", () => {
       expect(rule.enumerable).toBe(false);
       expect(rule.classes).toEqual([]);
     }
-    expect(result.warnings).toHaveLength(3);
-    expect(result.warnings[0]).toContain("add `samples`");
+    expect(result.warnings.map((w) => [w.code, w.ruleIndex])).toEqual([
+      ["not-enumerable", 0],
+      ["not-enumerable", 1],
+      ["not-enumerable", 2],
+    ]);
+    expect(result.warnings[0]?.source).toBe("^bg-(\\w+)$");
+    expect(result.warnings[0]?.message).toContain("add `samples`");
   });
 
   it("caps a rule at 100 classes in the docs and warns (keeping the shown ones)", () => {
@@ -119,7 +124,8 @@ describe("enumerateClasses — regex fallback (no samples)", () => {
     const result = enumerateClasses({ rules }, { maxNumber: 12 });
     expect(result.rules[0]?.classes).toHaveLength(100);
     expect(result.rules[0]?.enumerable).toBe(true);
-    expect(result.warnings[0]).toContain("capped at 100 of 169 classes");
+    expect(result.warnings[0]).toMatchObject({ code: "capped", ruleIndex: 0, source: "^x-(\\d+)-(\\d+)$" });
+    expect(result.warnings[0]?.message).toContain("capped at 100 of 169 classes");
   });
 
   it("does not warn or cap a rule that stays under 100 classes", () => {
@@ -133,7 +139,7 @@ describe("enumerateClasses — regex fallback (no samples)", () => {
     const rules: Rule[] = [[/^x-(\d+)-(\d+)$/, ([, a, b]) => ({ order: `${a}${b}` })]];
     const capped = enumerateClasses({ rules }, { maxNumber: 12, maxClassesPerRule: 10 });
     expect(capped.rules[0]?.classes).toHaveLength(10);
-    expect(capped.warnings[0]).toContain("capped at 10 of 169 classes");
+    expect(capped.warnings[0]?.message).toContain("capped at 10 of 169 classes");
 
     const uncapped = enumerateClasses({ rules }, { maxNumber: 12, maxClassesPerRule: 0 });
     expect(uncapped.rules[0]?.classes).toHaveLength(169);
@@ -146,7 +152,7 @@ describe("enumerateClasses — regex fallback (no samples)", () => {
     const result = enumerateClasses({ rules }, { maxNumber: 12 });
     expect(result.rules[0]?.enumerable).toBe(true);
     expect(result.rules[0]?.classes).toHaveLength(100);
-    expect(result.warnings[0]).toContain("capped at 100 of 2197 classes");
+    expect(result.warnings[0]?.message).toContain("capped at 100 of 2197 classes");
   });
 
   it("drops candidates the handler rejects", () => {
@@ -199,11 +205,11 @@ describe("enumerateClasses — attribution", () => {
       {
         label: "hover",
         source: "^hover:",
-        group: undefined,
+        group: null,
         note: "&:hover",
         sample: ".hover\\:<utility>:hover { … }",
       },
-      { label: "^dark:", source: "^dark:", group: undefined, note: undefined, sample: undefined },
+      { label: "^dark:", source: "^dark:", group: null, note: null, sample: null },
     ]);
   });
 
@@ -238,6 +244,17 @@ describe("enumerateClasses — attribution", () => {
     expect(result.rules.map((r) => r.label)).toEqual(["margin"]);
   });
 
+  it("keeps config positions in rule and warning indexes when hidden rules are dropped", () => {
+    const rules: Rule[] = [
+      [/^text-black$/, () => ({ color: "black" }), { hidden: true }],
+      [/^flex$/, () => ({ display: "flex" })],
+      [/^bg-(\w+)$/, () => ({ background: "red" })],
+    ];
+    const result = enumerateClasses({ rules });
+    expect(result.rules.map((r) => r.index)).toEqual([1, 2]);
+    expect(result.warnings.map((w) => w.ruleIndex)).toEqual([2]);
+  });
+
   it("does not leak a hidden rule's classes into another rule", () => {
     const rules: Rule[] = [
       [/^m-1$/, () => ({ margin: "special" }), { hidden: true }],
@@ -263,8 +280,9 @@ describe("enumerateClasses — attribution", () => {
     expect(result.rules[0]?.label).toBe("display");
     expect(result.rules[0]?.tags).toEqual(["preset"]);
     expect(result.rules[0]?.note).toBe("see MDN for details");
-    expect(result.rules[1]?.label).toBeUndefined();
+    expect(result.rules[1]?.label).toBeNull();
+    expect(result.rules[1]?.category).toBeNull();
     expect(result.rules[1]?.tags).toEqual([]);
-    expect(result.rules[1]?.note).toBeUndefined();
+    expect(result.rules[1]?.note).toBeNull();
   });
 });

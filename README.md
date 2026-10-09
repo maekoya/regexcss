@@ -90,14 +90,15 @@ That entry point also works everywhere else, and is the way to get the utilities
 npx regexcss docs
 ```
 
-| Flag                  | Description                                                                |
-| --------------------- | -------------------------------------------------------------------------- |
-| `-c, --config <path>` | Config file (default: auto-discover `regexcss.config.{ts,mts,js,mjs,cjs}`) |
-| `-o, --out <path>`    | Output HTML file (default: `regexcss-docs.html`)                           |
-| `--json`              | Print the docs data as JSON to stdout instead of writing HTML              |
-| `--max-number <n>`    | Upper bound when expanding `\d+` from rule regexes (default: `12`)         |
-| `--max-classes <n>`   | Max classes documented per rule (default: `100`, `0` = no cap)             |
-| `--title <text>`      | HTML page title                                                            |
+| Flag                  | Description                                                                   |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `-c, --config <path>` | Config file (default: auto-discover `regexcss.config.{ts,mts,js,mjs,cjs}`)    |
+| `-o, --out <path>`    | Output file (default: `regexcss-docs.html`)                                   |
+| `--json`              | Emit the docs data as JSON instead of HTML — to `--out` if given, else stdout |
+| `--max-number <n>`    | Upper bound when expanding `\d+` from rule regexes (default: `12`)            |
+| `--max-classes <n>`   | Max classes documented per rule (default: `100`, `0` = no cap)                |
+| `--concrete`          | Ignore rule `samples` and list real class names enumerated from every regex   |
+| `--title <text>`      | HTML page title                                                               |
 
 Classes are enumerated from each rule's regex when the pattern is finite (literals, alternations, small character classes, `\d+` bounded by `--max-number`). For open-ended patterns — or to document a dynamic rule compactly instead of listing every class — attach `samples` to the rule as an optional third tuple element. Each sample is a `{ class, style }` pair shown verbatim in the docs:
 
