@@ -3,6 +3,9 @@ packages:
   - packages/*
 
 allowBuilds:
+  # pulled in by sass (examples/scss-vite); only used by the sass CLI's --watch,
+  # and prebuilt platform packages make the native build unnecessary
+  "@parcel/watcher": false
   "@vscode/vsce-sign": false
   esbuild: true
   keytar: false

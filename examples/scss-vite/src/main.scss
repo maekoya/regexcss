@@ -1,0 +1,26 @@
+// `@use` must come first — the regexcss expansion appends its output to the end of
+// the file, so it never gets in the way of that rule.
+@use "./tokens" as t;
+
+@layer website.base, website.utilities;
+
+@import "./customMedia.css";
+@import "regexcss" layer(website.utilities);
+
+@layer website.base {
+  body {
+    margin: 0;
+    font-family: t.$font-stack;
+    background: #fff;
+  }
+
+  .card {
+    @include t.surface;
+    padding: t.$gap;
+
+    // nesting + `&` — compiled away by sass before Lightning CSS ever sees this
+    &:hover {
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+  }
+}

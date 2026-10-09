@@ -1,0 +1,19 @@
+// Plain SCSS module — variables and a mixin, consumed through `@use` in main.scss.
+// Its only job is to make this example unmistakably SCSS rather than CSS with a
+// different extension.
+$font-stack:
+  system-ui,
+  -apple-system,
+  "Helvetica Neue",
+  sans-serif;
+$bg: #fffdd0;
+$ink: #1f2933;
+$gap: 1.5rem;
+$radius: 0.5rem;
+
+@mixin surface {
+  background: $bg;
+  color: $ink;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: $radius;
+}
