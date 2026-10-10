@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 import { enumerateClasses } from "../src/docs/enumerate.ts";
 import { createVariant } from "../src/helpers.ts";
-import type { Rule, Variant } from "../src/types.ts";
+import type { CSSObject, Rule, Variant } from "../src/types.ts";
 
 const names = (result: ReturnType<typeof enumerateClasses>, ruleIndex = 0): string[] =>
   result.rules[ruleIndex]?.classes.map((c) => c.className) ?? [];
@@ -67,6 +67,14 @@ describe("enumerateClasses — samples (verbatim)", () => {
 });
 
 describe("enumerateClasses — regex fallback (no samples)", () => {
+  it("skips classes whose handler returns no declarations, like the generator does", () => {
+    // `none` matches but yields `{}` — the generator emits nothing for it
+    const rules: Rule[] = [[/^gap-(none|1)$/, ([, v]): CSSObject => (v === "none" ? {} : { gap: "1px" })]];
+    const result = enumerateClasses({ rules });
+    expect(names(result)).toEqual(["gap-1"]);
+    expect(result.warnings).toEqual([]);
+  });
+
   it("expands literal patterns", () => {
     const rules: Rule[] = [[/^flex$/, () => ({ display: "flex" })]];
     const result = enumerateClasses({ rules });

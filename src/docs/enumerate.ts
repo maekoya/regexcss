@@ -167,6 +167,10 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
       // classes into a sample-documented rule (in concrete mode we want exactly those)
       if (!match || !winner || winner.hidden || (!options.concrete && winner.hasSamples)) continue;
       seen.add(candidate);
+      // a handler that returns no declarations produces no CSS at runtime either
+      // (the generator reports the token as unmatched), so it is not a documentable class
+      const css = stringifyDeclarations(match.css);
+      if (css === "") continue;
       const shown = winner.matched;
       winner.matched = shown + 1;
       // keep matching (so the count is accurate) but stop adding rows past the cap
@@ -174,7 +178,7 @@ export const enumerateClasses = (config: UserConfig, options: EnumerateOptions =
         docRules[match.index]?.classes.push({
           kind: "class",
           className: prefix + candidate,
-          css: stringifyDeclarations(match.css),
+          css,
         });
       }
     }
