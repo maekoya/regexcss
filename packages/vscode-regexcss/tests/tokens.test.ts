@@ -35,6 +35,17 @@ describe("classAttributeContext", () => {
     expect(classAttributeContext(`plain text m-`, attrs)).toBeUndefined();
   });
 
+  it("ignores attributes that merely end with a class attribute name", () => {
+    expect(classAttributeContext(`<div data-class="fo`, attrs)).toBeUndefined();
+    expect(classAttributeContext(`<my-el subclass="fo`, attrs)).toBeUndefined();
+    expect(classAttributeContext(`<div aria-className="fo`, attrs)).toBeUndefined();
+  });
+
+  it("still detects Vue's bound :class / v-bind:class", () => {
+    expect(classAttributeContext(`<div :class="'m-`, attrs)).toEqual({ value: "'m-", word: "'m-" });
+    expect(classAttributeContext(`<div v-bind:class="fo`, attrs)).toEqual({ value: "fo", word: "fo" });
+  });
+
   it("respects the configured attribute list", () => {
     expect(classAttributeContext(`<div className="m-`, ["class"])).toBeUndefined();
     expect(classAttributeContext(`<div className="m-`, ["className"])).toEqual({ value: "m-", word: "m-" });
