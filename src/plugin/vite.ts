@@ -294,8 +294,8 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       return css;
     },
 
-    // CSS @import "regexcss"; を実 CSS に inline 展開（Tailwind v4 風）
-    // `layer(name)` 構文に対応：CSS 側で指定された name は config.layerName を上書き
+    // Expand `@import "regexcss";` in a stylesheet into the generated CSS (Tailwind v4
+    // style). A `layer(name)` on the import overrides config.layerName for that site.
     async transform(code, id) {
       if (id === RESOLVED_ID) return null;
       // module ids may carry a query (`/main.css?direct`, `/App.vue?vue&type=style&lang.scss`)
@@ -344,7 +344,7 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       logScanDiagnostics(this.environment?.logger);
       watchAll((f) => this.addWatchFile(f));
 
-      // 同一ファイル内に複数の @import がある場合も layer 別に1度だけ generate
+      // Several imports in one file: generate once per distinct layer
       const blocks = new Map<string | undefined, string>();
       for (const m of code.matchAll(CSS_IMPORT_RE)) {
         const key = m[1]?.trim().replace(/^["']|["']$/g, "");
@@ -354,12 +354,12 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
         blocks.set(key, css);
       }
 
-      // 生成CSSは「その場」ではなくファイル末尾（= 全 @import の後ろ）へ差し込む。
-      // インライン展開だと、後続の `@import` が生成済みの実ルールより後ろに押し出され、
-      // 「@import は @charset / @layer 文以外の全ルールより前」という CSS 仕様に反して
-      // Lightning CSS が `@import rules must precede all rules ...` で落ちるため。
-      // layer 指定時のカスケード順は冒頭の `@layer name, ...;` 宣言で確定するので、
-      // 生成ブロックの物理位置には依存しない。
+      // Append the generated CSS at the end of the file (after every `@import`), not in
+      // place of the import. Expanding in place would push any later `@import` behind
+      // real rules, which violates "@import must precede all rules except @charset /
+      // @layer statements" and makes Lightning CSS fail with `@import rules must precede
+      // all rules ...`. With a layer, cascade order is fixed by the leading
+      // `@layer name, ...;` statement, so the block's physical position does not matter.
       const withoutImports = code.replace(CSS_IMPORT_RE, "");
       const generated = [...blocks.values()].filter((css) => css.length > 0).join("\n\n");
       const out = generated ? `${withoutImports.trimEnd()}\n\n${generated}\n` : withoutImports;
