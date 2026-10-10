@@ -38,20 +38,9 @@ export const runCli = async (argv: string[], options: RunCliOptions = {}): Promi
   const stdout = options.stdout ?? ((line: string) => console.log(line));
   const stderr = options.stderr ?? ((line: string) => console.error(line));
 
-  let values: {
-    config?: string;
-    out?: string;
-    json?: boolean;
-    "max-number"?: string;
-    "max-classes"?: string;
-    concrete?: boolean;
-    title?: string;
-    help?: boolean;
-    version?: boolean;
-  };
-  let positionals: string[];
+  let parsed;
   try {
-    ({ values, positionals } = parseArgs({
+    parsed = parseArgs({
       args: argv,
       allowPositionals: true,
       options: {
@@ -65,12 +54,13 @@ export const runCli = async (argv: string[], options: RunCliOptions = {}): Promi
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
       },
-    }));
+    });
   } catch (e) {
     stderr(e instanceof Error ? e.message : String(e));
     stderr(USAGE);
     return 1;
   }
+  const { values, positionals } = parsed;
 
   if (values.help) {
     stdout(USAGE);
