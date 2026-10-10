@@ -1,0 +1,49 @@
+name: CI
+
+# Runs on every pull request (including ones targeting release/* branches)
+# and on pushes to main.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # examples/ and packages/vscode-regexcss import `regexcss` through its
+      # package exports (dist/), so the core must be built before type-aware lint.
+      - name: Build regexcss core
+        run: pnpm --filter regexcss build
+
+      - name: Format / lint / type-aware check
+        run: pnpm exec vp check
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm exec vp test --run
