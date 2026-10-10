@@ -324,4 +324,33 @@ describe("renderDocsHtml", () => {
     expect(html).toContain("<title>My &lt;Utilities&gt;</title>");
     expect(html).toContain("<h1>My &lt;Utilities&gt;</h1>");
   });
+
+  it("gives non-ASCII categories distinct, readable anchor ids", () => {
+    const html = renderDocsHtml(
+      data({ rules: [rule({ category: "色", source: "^a$" }), rule({ category: "余白", source: "^b$" })] }),
+    );
+    expect(html).toContain('<h2 id="cat-色"');
+    expect(html).toContain('<h2 id="cat-余白"');
+    expect(html).toContain('<a href="#cat-色-0"');
+    expect(html).toContain('<a href="#cat-余白-0"');
+  });
+
+  it("never emits duplicate ids, even when categories slug alike", () => {
+    const html = renderDocsHtml(
+      data({
+        rules: [
+          rule({ category: "Foo Bar", source: "^a$" }),
+          rule({ category: "foo-bar", source: "^b$" }),
+          // "A" rule #1 would be `cat-a-1`, the same as category "A 1"'s heading id
+          rule({ category: "A", source: "^c$", label: "c" }),
+          rule({ category: "A", source: "^d$", label: "d" }),
+          rule({ category: "A 1", source: "^e$" }),
+        ],
+      }),
+    );
+    const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+    // every nav link still points at an existing anchor
+    for (const [, href] of html.matchAll(/<a href="#([^"]+)"/g)) expect(ids).toContain(href);
+  });
 });

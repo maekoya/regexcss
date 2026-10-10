@@ -43,7 +43,22 @@ const highlightRegex = (source: string): string => {
   return out;
 };
 
-const slug = (category: string): string => `cat-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+// Unicode letters/digits are kept so non-ASCII categories (e.g. Japanese) still get a
+// readable, distinct slug instead of all collapsing to `cat--`.
+const slug = (category: string): string => `cat-${category.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-")}`;
+
+// Hands out each id once: categories that slug alike ("Foo Bar" / "foo-bar"), or a
+// category id that coincides with another category's rule id ("A 1" → `cat-a-1` vs.
+// rule #1 of "A"), get a numeric suffix so every anchor and nav link stays unique.
+const createIdAllocator = (): ((base: string) => string) => {
+  const used = new Set<string>();
+  return (base) => {
+    let id = base;
+    for (let n = 2; used.has(id); n++) id = `${base}-${n}`;
+    used.add(id);
+    return id;
+  };
+};
 
 // preset rules hide their regex in docs output and sort below user-defined rules
 const isPreset = (rule: DocRule): boolean => rule.tags.includes("preset");
@@ -211,11 +226,12 @@ export const renderDocsHtml = (data: DocsData, options: RenderDocsHtmlOptions = 
     ...entries.filter(([, rules]) => rules.every(isPreset)),
   ];
 
+  const allocateId = createIdAllocator();
   const navParts: string[] = [];
   const sectionParts: string[] = [];
   for (const [category, rules] of ordered) {
-    const catId = slug(category);
-    const rendered = groupByLabel(rules).map((group, i) => renderGroup(group, `${catId}-${i}`));
+    const catId = allocateId(slug(category));
+    const rendered = groupByLabel(rules).map((group, i) => renderGroup(group, allocateId(`${catId}-${i}`)));
     navParts.push(`<h3>${escapeHtml(category)}</h3>\n${rendered.map((r) => r.navLink).join("\n")}`);
     sectionParts.push(
       `<h2 id="${catId}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</h2>\n${rendered.map((r) => r.section).join("\n")}`,

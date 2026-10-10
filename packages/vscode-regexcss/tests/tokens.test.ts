@@ -18,6 +18,10 @@ describe("tokenAt", () => {
   it("catches the token when the cursor is at its trailing edge", () => {
     expect(tokenAt(`flex `, 4)).toEqual({ text: "flex", start: 0, end: 4 });
   });
+
+  it("keeps a leading `~` marker, like the core defaultExtractor", () => {
+    expect(tokenAt(`<p class="~m-1/2">`, 12)).toEqual({ text: "~m-1/2", start: 10, end: 16 });
+  });
 });
 
 describe("classAttributeContext", () => {
@@ -33,6 +37,17 @@ describe("classAttributeContext", () => {
     expect(classAttributeContext(`<div id="foo`, attrs)).toBeUndefined();
     expect(classAttributeContext(`<div class="mt-4" `, attrs)).toBeUndefined(); // closed
     expect(classAttributeContext(`plain text m-`, attrs)).toBeUndefined();
+  });
+
+  it("ignores attributes that merely end with a class attribute name", () => {
+    expect(classAttributeContext(`<div data-class="fo`, attrs)).toBeUndefined();
+    expect(classAttributeContext(`<my-el subclass="fo`, attrs)).toBeUndefined();
+    expect(classAttributeContext(`<div aria-className="fo`, attrs)).toBeUndefined();
+  });
+
+  it("still detects Vue's bound :class / v-bind:class", () => {
+    expect(classAttributeContext(`<div :class="'m-`, attrs)).toEqual({ value: "'m-", word: "'m-" });
+    expect(classAttributeContext(`<div v-bind:class="fo`, attrs)).toEqual({ value: "fo", word: "fo" });
   });
 
   it("respects the configured attribute list", () => {
