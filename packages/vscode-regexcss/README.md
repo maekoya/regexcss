@@ -41,6 +41,10 @@ extensions just work when they are in the include).
   numeric scales), filtered down to a clean, Tailwind-like set.
 - **Auto-reload** — reloads automatically when `regexcss.config.*` or the extension
   settings change.
+- **Reload Config command** — run **regexcss: Reload Config** from the Command Palette
+  after editing a file your config pulls in (an imported module such as `tokens.ts`, or a
+  CSS file read by `loadCustomMedia`). Auto-reload only watches `regexcss.config.*`
+  itself, so changes to those files are not picked up on their own.
 
 ## Supported languages
 
