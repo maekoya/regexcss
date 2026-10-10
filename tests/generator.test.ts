@@ -235,6 +235,17 @@ describe("createGenerator", () => {
     expect(warnings[0]?.token).toBe("md:md:m-1");
   });
 
+  it("shares the memo cache between explain and generate without losing output or warnings", async () => {
+    const gen = createGenerator({ rules, variants });
+    const fresh = await createGenerator({ rules, variants }).generate(["md:hover:m-1", "md:x-1"]);
+    expect(gen.explain("md:hover:m-1")).toBeDefined();
+    expect(gen.explain("md:x-1")).toBeUndefined();
+    const afterExplain = await gen.generate(["md:hover:m-1", "md:x-1"]);
+    expect(afterExplain.css).toBe(fresh.css);
+    expect(afterExplain.warnings).toEqual(fresh.warnings);
+    expect(afterExplain.warnings).toHaveLength(1);
+  });
+
   it("suppresses the token even when the post-collision residue matches a rule", async () => {
     const grouped: Variant[] = [
       [/^md:/, (_, raw) => ({ matcher: raw.slice(3), parent: "@media (--md)", group: "window-size" })],
