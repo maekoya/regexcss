@@ -305,12 +305,12 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       const syntax = styleSyntax(file, query);
       if (syntax === undefined) return null;
       if (file.includes("/node_modules/")) return null;
-      if (!CSS_IMPORT_RE.test(code)) {
+      // `search` ignores the /g flag and `lastIndex`, unlike `test` on a global regex
+      if (code.search(CSS_IMPORT_RE) === -1) {
         // this file (no longer) embeds generated CSS — drop it from the refresh list
         cssImporters.delete(id);
         return null;
       }
-      CSS_IMPORT_RE.lastIndex = 0;
       if (syntax === "indented") {
         // Braces are a syntax error here, so there is no way to inline the generated
         // CSS. Fail with the fix rather than emitting something the compiler rejects.
@@ -346,9 +346,7 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
 
       // 同一ファイル内に複数の @import がある場合も layer 別に1度だけ generate
       const blocks = new Map<string | undefined, string>();
-      const matches = [...code.matchAll(CSS_IMPORT_RE)];
-      CSS_IMPORT_RE.lastIndex = 0;
-      for (const m of matches) {
+      for (const m of code.matchAll(CSS_IMPORT_RE)) {
         const key = m[1]?.trim().replace(/^["']|["']$/g, "");
         if (blocks.has(key)) continue;
         const { css, warnings } = await generator.generate(tokens, key !== undefined ? { layerName: key } : undefined);
@@ -362,7 +360,6 @@ export default function regexcss(options: PluginOptions = {}): Plugin {
       // Lightning CSS が `@import rules must precede all rules ...` で落ちるため。
       // layer 指定時のカスケード順は冒頭の `@layer name, ...;` 宣言で確定するので、
       // 生成ブロックの物理位置には依存しない。
-      CSS_IMPORT_RE.lastIndex = 0;
       const withoutImports = code.replace(CSS_IMPORT_RE, "");
       const generated = [...blocks.values()].filter((css) => css.length > 0).join("\n\n");
       const out = generated ? `${withoutImports.trimEnd()}\n\n${generated}\n` : withoutImports;
