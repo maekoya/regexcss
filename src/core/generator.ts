@@ -141,6 +141,51 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
   // handlers are required to be pure, so a token always produces the same result.
   const cache = new Map<string, CacheEntry>();
 
+  // Per-token pipeline shared by `generate` and `explain`: prefix filter → variant
+  // chain → rule match. Returns undefined for tokens outside the prefix (they were
+  // never candidates, so they are neither matched nor unmatched).
+  const resolveToken = (raw: string): CacheEntry | undefined => {
+    let matcherInput = raw;
+    if (config.prefix !== "") {
+      if (!raw.startsWith(config.prefix)) return undefined;
+      matcherInput = raw.slice(config.prefix.length);
+    }
+
+    const cached = cache.get(raw);
+    if (cached !== undefined) return cached;
+
+    const { matcher, chain, variantIndexes, collidedGroups } = applyVariantChain(matcherInput, config.variants);
+    const ctx = {
+      rawSelector: raw,
+      currentSelector: matcher,
+      variants: chain,
+    };
+    const match = matchRule(matcher, config.rules, ctx);
+    const decls = match ? stringifyDeclarations(match.css) : "";
+    let entry: CacheEntry;
+    if (collidedGroups.length > 0) {
+      // A group collision always suppresses the token: `md:sm:…` is a near-certain
+      // typo, and half-applied CSS (only the first variant's wrapper) is worse than
+      // none. matchRule still runs so the warning can say the residue would match.
+      entry = { block: null, warning: collisionWarning(raw, collidedGroups, matcher, match !== undefined) };
+    } else if (match === undefined || decls.length === 0) {
+      entry = chain.length > 0 ? { block: null, warning: variantUnmatchedWarning(raw, matcher) } : { block: null };
+    } else {
+      entry = {
+        block: {
+          raw,
+          selector: buildSelector(raw, chain),
+          parents: collectParents(chain),
+          decls,
+          ruleIndex: match.index,
+          variantIndexes,
+        },
+      };
+    }
+    cache.set(raw, entry);
+    return entry;
+  };
+
   const generate = async (tokens: Iterable<string>, options?: GenerateOptions): Promise<GenerateResult> => {
     const seen = new Set<string>();
     const matched = new Set<string>();
@@ -152,61 +197,15 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
       if (seen.has(raw)) continue;
       seen.add(raw);
 
-      let matcherInput = raw;
-      if (config.prefix !== "") {
-        if (!raw.startsWith(config.prefix)) continue;
-        matcherInput = raw.slice(config.prefix.length);
-      }
-
-      const cached = cache.get(raw);
-      if (cached !== undefined) {
-        if (cached.block === null) {
-          unmatched.add(raw);
-        } else {
-          blocks.push(cached.block);
-          matched.add(raw);
-        }
-        if (cached.warning) warnings.push(cached.warning);
-        continue;
-      }
-
-      const { matcher, chain, variantIndexes, collidedGroups } = applyVariantChain(matcherInput, config.variants);
-      const ctx = {
-        rawSelector: raw,
-        currentSelector: matcher,
-        variants: chain,
-      };
-      const match = matchRule(matcher, config.rules, ctx);
-      const decls = match ? stringifyDeclarations(match.css) : "";
-      // A group collision always suppresses the token: `md:sm:…` is a near-certain
-      // typo, and half-applied CSS (only the first variant's wrapper) is worse than
-      // none. matchRule still runs so the warning can say the residue would match.
-      const collided = collidedGroups.length > 0;
-      const produced = !collided && match !== undefined && decls.length > 0;
-      const warning = collided
-        ? collisionWarning(raw, collidedGroups, matcher, match !== undefined)
-        : !produced && chain.length > 0
-          ? variantUnmatchedWarning(raw, matcher)
-          : undefined;
-      if (warning) warnings.push(warning);
-
-      if (!produced) {
-        cache.set(raw, { block: null, ...(warning ? { warning } : {}) });
+      const entry = resolveToken(raw);
+      if (entry === undefined) continue;
+      if (entry.block === null) {
         unmatched.add(raw);
-        continue;
+      } else {
+        blocks.push(entry.block);
+        matched.add(raw);
       }
-
-      const block: Block = {
-        raw,
-        selector: buildSelector(raw, chain),
-        parents: collectParents(chain),
-        decls,
-        ruleIndex: match?.index ?? 0,
-        variantIndexes,
-      };
-      cache.set(raw, { block, ...(warning ? { warning } : {}) });
-      blocks.push(block);
-      matched.add(raw);
+      if (entry.warning) warnings.push(entry.warning);
     }
 
     const body = groupBlocks(blocks);
@@ -221,19 +220,9 @@ export const createGenerator = (userConfig: UserConfig): Generator => {
   // `generate`, but returns the unwrapped selector / declarations / parents (no
   // `@layer` / `@custom-media`). Returns undefined when the token yields no CSS.
   const explain = (token: string): ExplainResult | undefined => {
-    let matcherInput = token;
-    if (config.prefix !== "") {
-      if (!token.startsWith(config.prefix)) return undefined;
-      matcherInput = token.slice(config.prefix.length);
-    }
-    const { matcher, chain, collidedGroups } = applyVariantChain(matcherInput, config.variants);
-    if (collidedGroups.length > 0) return undefined; // e.g. md:sm: — suppressed like in generate
-    const ctx = { rawSelector: token, currentSelector: matcher, variants: chain };
-    const match = matchRule(matcher, config.rules, ctx);
-    if (!match) return undefined;
-    const declarations = stringifyDeclarations(match.css);
-    if (declarations.length === 0) return undefined;
-    return { selector: buildSelector(token, chain), declarations, parents: collectParents(chain) };
+    const block = resolveToken(token)?.block;
+    if (!block) return undefined;
+    return { selector: block.selector, declarations: block.decls, parents: block.parents };
   };
 
   return { generate, explain, config };

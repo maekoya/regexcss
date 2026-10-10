@@ -35,7 +35,7 @@ export default defineConfig({
     ],
   ],
   variants: [
-    // group: 同一トークン内で window-size 系 variant は1つまで（md:sm:〜 を弾く）
+    // group: at most one window-size variant per token (rejects md:sm:…)
     {
       prefix: "md",
       parent: "@media (--md)",
