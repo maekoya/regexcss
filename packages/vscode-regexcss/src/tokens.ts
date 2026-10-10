@@ -1,8 +1,8 @@
 // Pure text helpers (no vscode dependency) so they can be unit-tested directly.
 
 // Characters that make up a class token — same set as regexcss's defaultExtractor
-// (`/[\w:.\-/]+/g`): word chars plus `:` `.` `-` `/`.
-const TOKEN_CHAR = /[\w:./-]/;
+// (`/[\w:.\-/~]+/g`): word chars plus `:` `.` `-` `/` `~`.
+const TOKEN_CHAR = /[\w:./~-]/;
 
 export interface TokenSpan {
   text: string;

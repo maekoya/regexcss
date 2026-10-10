@@ -18,6 +18,10 @@ describe("tokenAt", () => {
   it("catches the token when the cursor is at its trailing edge", () => {
     expect(tokenAt(`flex `, 4)).toEqual({ text: "flex", start: 0, end: 4 });
   });
+
+  it("keeps a leading `~` marker, like the core defaultExtractor", () => {
+    expect(tokenAt(`<p class="~m-1/2">`, 12)).toEqual({ text: "~m-1/2", start: 10, end: 16 });
+  });
 });
 
 describe("classAttributeContext", () => {
