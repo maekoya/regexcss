@@ -21,6 +21,36 @@ const remToPxComment = (declaration: string): string | undefined => {
   return value.replace(REM_VALUE, (_, n: string) => `${+(Number(n) * REM_IN_PX).toFixed(4)}px`).trim();
 };
 
+/**
+ * Split a declaration string on its top-level `;` only. A `;` inside quotes or
+ * parentheses belongs to the value — e.g. `url("data:image/svg+xml;base64,…")` or
+ * `content: ";"` — and must not start a new line.
+ */
+const splitDeclarations = (declarations: string): string[] => {
+  const out: string[] = [];
+  let quote: string | undefined;
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < declarations.length; i++) {
+    const c = declarations[i];
+    if (quote) {
+      if (c === "\\") i++; // skip the escaped character
+      else if (c === quote) quote = undefined;
+    } else if (c === '"' || c === "'") {
+      quote = c;
+    } else if (c === "(") {
+      depth++;
+    } else if (c === ")") {
+      depth = Math.max(0, depth - 1);
+    } else if (c === ";" && depth === 0) {
+      out.push(declarations.slice(start, i));
+      start = i + 1;
+    }
+  }
+  out.push(declarations.slice(start));
+  return out.map((d) => d.trim()).filter(Boolean);
+};
+
 const indent = (block: string): string =>
   block
     .split("\n")
@@ -33,10 +63,7 @@ const indent = (block: string): string =>
  * onto their own indented lines; variant `parents` wrap the rule (outermost first).
  */
 export const formatExplainCss = (res: ExplainResult): string => {
-  const decls = res.declarations
-    .split(";")
-    .map((d) => d.trim())
-    .filter(Boolean)
+  const decls = splitDeclarations(res.declarations)
     .map((d) => {
       const px = remToPxComment(d);
       return px ? `  ${d}; /* ${px} */` : `  ${d};`;
