@@ -46,6 +46,18 @@ export function activate(context: vscode.ExtensionContext): void {
   // adding/removing workspace folders changes which configs are discoverable
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(invalidate));
 
+  // Manual reload. The watcher above only sees regexcss.config.* itself — files the
+  // config pulls in (an imported tokens module, a CSS file read by loadCustomMedia) are
+  // not tracked, so edits there need this. Configs load lazily, so the next hover or
+  // completion re-reads everything from disk.
+  context.subscriptions.push(
+    vscode.commands.registerCommand("regexcss.reloadConfig", () => {
+      registry.invalidate();
+      output.appendLine("config cache cleared — reloading on next use");
+      void vscode.window.setStatusBarMessage("regexcss: config reloaded", 3000);
+    }),
+  );
+
   // react to setting changes (configPath) by dropping cached configs
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {

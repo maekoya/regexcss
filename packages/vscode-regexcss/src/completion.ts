@@ -25,7 +25,7 @@ export const createCompletionProvider = (
       const item = new vscode.CompletionItem(c.className, vscode.CompletionItemKind.Constant);
       item.detail = c.css;
       const md = new vscode.MarkdownString();
-      md.appendCodeblock(`.${c.className} { ${c.css} }`, "css");
+      md.appendCodeblock(c.preview, "css");
       item.documentation = md;
       item.range = range;
       return item;

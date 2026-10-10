@@ -43,6 +43,10 @@ const highlightRegex = (source: string): string => {
   return out;
 };
 
+// `<code>` for a regex source: highlighted `/…/` with the raw pattern as its tooltip
+const renderRegex = (source: string): string =>
+  `<code class="re" title="/${escapeHtml(source)}/">/${highlightRegex(source)}/</code>`;
+
 // Unicode letters/digits are kept so non-ASCII categories (e.g. Japanese) still get a
 // readable, distinct slug instead of all collapsing to `cat--`.
 const slug = (category: string): string => `cat-${category.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-")}`;
@@ -66,7 +70,7 @@ const isPreset = (rule: DocRule): boolean => rule.tags.includes("preset");
 // heading for a single (unmerged) rule: label (or the regex when unlabeled), the
 // regex itself (omitted for labeled preset rules), then tag chips
 const renderHeading = (rule: DocRule): string => {
-  const regex = `<code class="re" title="/${escapeHtml(rule.source)}/">/${highlightRegex(rule.source)}/</code>`;
+  const regex = renderRegex(rule.source);
   const tags = rule.tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("");
   if (!rule.label) return `${regex}${tags}`;
   const detail = isPreset(rule) ? "" : regex;
@@ -83,7 +87,7 @@ const renderRows = (rule: DocRule): string =>
 
 // one constituent rule inside a merged same-label group: its regex, then its classes
 const renderPattern = (rule: DocRule): string => {
-  const regex = `<p class="pattern"><code class="re" title="/${escapeHtml(rule.source)}/">/${highlightRegex(rule.source)}/</code>`;
+  const regex = `<p class="pattern">${renderRegex(rule.source)}`;
   if (!rule.enumerable) return `${regex}<span class="badge">not enumerable — add samples</span></p>`;
   if (rule.classes.length === 0) return `${regex}</p>`;
   return `${regex}</p>\n<table><tbody>\n${renderRows(rule)}\n</tbody></table>`;
@@ -192,7 +196,7 @@ const renderGroup = (group: RuleGroup, id: string): RenderedGroup => {
 // the regex, and a note describing the selector / at-rule it applies.
 const renderVariant = (variant: DocVariant, id: string): RenderedGroup => {
   const dataLabel = escapeHtml([variant.label, variant.group ?? "", variant.note ?? ""].join(" ").toLowerCase());
-  const regex = `<code class="re" title="/${escapeHtml(variant.source)}/">/${highlightRegex(variant.source)}/</code>`;
+  const regex = renderRegex(variant.source);
   const group = variant.group ? `<span class="tag">group: ${escapeHtml(variant.group)}</span>` : "";
   const navLink = `<a href="#${id}" data-label="${dataLabel}">${escapeHtml(variant.label)}</a>`;
   const note = variant.note ? `\n<p class="note">${escapeHtml(variant.note)}</p>` : "";
