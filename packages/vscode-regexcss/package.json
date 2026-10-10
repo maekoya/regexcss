@@ -38,6 +38,13 @@
     "typescript": "7.0.2"
   },
   "contributes": {
+    "commands": [
+      {
+        "command": "regexcss.reloadConfig",
+        "title": "Reload Config",
+        "category": "regexcss"
+      }
+    ],
     "configuration": {
       "title": "regexcss IntelliSense",
       "properties": {
