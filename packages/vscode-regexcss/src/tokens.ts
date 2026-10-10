@@ -39,8 +39,10 @@ export const classAttributeContext = (
 ): { value: string; word: string } | undefined => {
   if (attributes.length === 0) return undefined;
   const attrs = attributes.map(escapeRe).join("|");
-  // <attr> = <quote> <chars-without-a-closing-quote> <cursor>
-  const re = new RegExp(`(?:${attrs})\\s*=\\s*(["'\\\`])((?:(?!\\1).)*)$`);
+  // <attr> = <quote> <chars-without-a-closing-quote> <cursor>. The attribute name must
+  // start a name — not end one like `data-class` / `subclass` — but a preceding `:`
+  // is fine so Vue's `:class` / `v-bind:class` still count.
+  const re = new RegExp(`(?<![\\w-])(?:${attrs})\\s*=\\s*(["'\\\`])((?:(?!\\1).)*)$`);
   const m = before.match(re);
   if (!m) return undefined;
   const value = m[2] ?? "";
