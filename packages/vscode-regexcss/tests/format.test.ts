@@ -42,6 +42,22 @@ describe("formatExplainCss", () => {
     ).toBe(".truncate {\n  overflow: hidden;\n  text-overflow: ellipsis;\n}");
   });
 
+  it("keeps a ';' inside quotes or parentheses as part of the value", () => {
+    expect(
+      formatExplainCss({
+        selector: ".bg-icon",
+        declarations: `background-image: url("data:image/svg+xml;base64,AAA"); content: ";"; color: red;`,
+        parents: [],
+      }),
+    ).toBe(`.bg-icon {\n  background-image: url("data:image/svg+xml;base64,AAA");\n  content: ";";\n  color: red;\n}`);
+  });
+
+  it("does not end a quoted value at an escaped quote", () => {
+    expect(formatExplainCss({ selector: ".q", declarations: `content: "a\\";b"; color: red;`, parents: [] })).toBe(
+      `.q {\n  content: "a\\";b";\n  color: red;\n}`,
+    );
+  });
+
   it("wraps the rule in variant at-rule parents", () => {
     expect(formatExplainCss({ selector: ".md\\:m-4", declarations: "margin: 1rem;", parents: ["@media (--md)"] })).toBe(
       "@media (--md) {\n  .md\\:m-4 {\n    margin: 1rem; /* 16px */\n  }\n}",
